@@ -1,0 +1,84 @@
+---
+title: "Numerator relationship matrix"
+output: html_document
+date: "2025-02-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(package = "pedigreeTools")
+```
+
+
+## Numerator relationship matrix
+
+The matrix that indicates the additive genetic relationship among individuals is called the numerator
+relationship matrix (A). It is symmetric and its diagonal element for animal $i(a_{ii})$ is equal to $1 + F_i$, where $F_i$ is the inbreeding coefficient of animal $i$ (Wright, 1922). The diagonal element represent twice the probability that two gametes taken at random from animal $i$ will carry identical alleles by descent. The off-diagonal elements, $a_{ij}$, equals the numerator of the coefficient of relationship between animals $i$ and $j$. When multiplied by the additive genetic variance $xx$ is the covariance among breeding values. $A$ is twice the coefficient of parantages.
+
+However, we can face memory bottlenecks, when we need to compute big pedigree...
+
+```{r}
+# Ax = b
+
+# 1) Create a pedigree
+
+ped = data.frame(iid = 1:7,
+                 fid = c(0, 0, 1, 1, 3, 1, 5), 
+                 mid = c(0, 0, 0, 2, 4, 4, 6))
+
+(ped2 = pedigree(sire  = ped$fid, 
+                dam   = ped$mid,
+                label = ped$iid))
+```
+
+# Tabular method (recursive method) to compute A
+
+1) If both parents $s$ and $d$ of animal $i$ are known:
+
+- The diagonal elements $(a)_{ii}$ correspond to:
+$a_{ii} = 1 + F_i = 1 + 0.5(a_{sd})$
+
+- The off-diagonal element $a_{ji}$ correspond to:
+$a_{ji} = a_{ij} = 0.5(a_{js} + a_{jd})$
+
+2) If only one parent $s$ or $d$ of animal $i$ is known:
+
+- The diagonal elements $(a)_{ii}$ correspond to:
+$a_{ii} = 1$
+
+- The off-diagonal element $a_{ji}$ correspond to:
+$a_{ji} = a_{ij} = 0.5(a_{js/jd})$
+
+3) If both parents are unknown and are assumed unrelated:
+
+- The diagonal elements $(a)_{ii}$ correspond to:
+$a_{ii} = 1$
+
+- The off-diagonal element $a_{ji}$ correspond to:
+$a_{ji} = a_{ij} = 0$
+
+```{r}
+A = getA(ped2)
+A
+```
+
+# Thompson's method
+
+
+
+TDT'
+
+```{r}
+(T = getT(ped2))
+(D = getD(ped2))
+```
+
+
+
+
+
+
