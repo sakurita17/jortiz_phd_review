@@ -10,16 +10,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r}
-library(package = "pedigreeTools")
+library(package = "pedigreeTools") # R package to create and create different pedigree
+                                   # features
 ```
 
 
-## Numerator relationship matrix
-
-The matrix that indicates the additive genetic relationship among individuals is called the numerator
-relationship matrix (A). It is symmetric and its diagonal element for animal $i(a_{ii})$ is equal to $1 + F_i$, where $F_i$ is the inbreeding coefficient of animal $i$ (Wright, 1922). The diagonal element represent twice the probability that two gametes taken at random from animal $i$ will carry identical alleles by descent. The off-diagonal elements, $a_{ij}$, equals the numerator of the coefficient of relationship between animals $i$ and $j$. When multiplied by the additive genetic variance $xx$ is the covariance among breeding values. $A$ is twice the coefficient of parantages.
-
-However, we can face memory bottlenecks, when we need to compute big pedigree...
+# 1) Create a pedigree
 
 ```{r}
 # Ax = b
@@ -35,9 +31,9 @@ ped = data.frame(iid = 1:7,
                 label = ped$iid))
 ```
 
-# Tabular method (recursive method) to compute A
+# 2) Recursive method to compute A
 
-1) If both parents $s$ and $d$ of animal $i$ are known:
+If both parents $s$ and $d$ of animal $i$ are known:
 
 - The diagonal elements $(a)_{ii}$ correspond to:
 $a_{ii} = 1 + F_i = 1 + 0.5(a_{sd})$
@@ -45,7 +41,7 @@ $a_{ii} = 1 + F_i = 1 + 0.5(a_{sd})$
 - The off-diagonal element $a_{ji}$ correspond to:
 $a_{ji} = a_{ij} = 0.5(a_{js} + a_{jd})$
 
-2) If only one parent $s$ or $d$ of animal $i$ is known:
+If only one parent $s$ or $d$ of animal $i$ is known:
 
 - The diagonal elements $(a)_{ii}$ correspond to:
 $a_{ii} = 1$
@@ -53,7 +49,7 @@ $a_{ii} = 1$
 - The off-diagonal element $a_{ji}$ correspond to:
 $a_{ji} = a_{ij} = 0.5(a_{js/jd})$
 
-3) If both parents are unknown and are assumed unrelated:
+If both parents are unknown and are assumed unrelated:
 
 - The diagonal elements $(a)_{ii}$ correspond to:
 $a_{ii} = 1$
@@ -62,20 +58,33 @@ $a_{ii} = 1$
 $a_{ji} = a_{ij} = 0$
 
 ```{r}
-A = getA(ped2)
-A
+(A = getA(ped2))
 ```
 
-# Thompson's method
+# 3) Thompson's method
 
+The relationship matrix can be expressed as $A = TDT^T$, where $T$ is a lower triangular matrix $D$ is a diagonal matrix. 
 
+The matrix $T$ traces the flow of genes from one generation to the other; in other words, it accounts only for direct (parent-offspring) relationships. 
 
-TDT'
+Rules for $i_{th}$: 
+
+- $t_{ii} = 1$
+- $t_{ij} = 0.5(t_{sj} + t_{dj})$ # If both parents (s and d) are known
+- $t_{ij} = 0.5(t_{sj})$ # If only want parent (s) is known
+- $t_{ij} = 0$ # If neither parent is known
 
 ```{r}
 (T = getT(ped2))
+```
+
+The diagonal matrix $D$ is the variance and covariance matrix for Mendelian sampling. 
+
+
+```{r}
 (D = getD(ped2))
 ```
+
 
 
 
