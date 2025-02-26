@@ -8,12 +8,18 @@ date: "2025-02-24"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Objective
+This exercise want to recreate the concept and computation 
+around the Numerator relationship matrix and all three methods to its estimation. 
+
+# Library
+For the aim of this exercise, I will use the library "pedigreeTools": https://github.com/Rpedigree/pedigreeTools
+
 
 ```{r}
 library(package = "pedigreeTools") # R package to create and create different pedigree
                                    # features
 ```
-
 
 # 1) Create a pedigree
 
@@ -31,7 +37,7 @@ ped = data.frame(iid = 1:7,
                 label = ped$iid))
 ```
 
-# 2) Recursive method to compute A
+# 2) Tabular method
 
 If both parents $s$ and $d$ of animal $i$ are known:
 
@@ -64,6 +70,8 @@ $a_{ji} = a_{ij} = 0$
 # 3) Thompson's method
 
 The relationship matrix can be expressed as $A = TDT^T$, where $T$ is a lower triangular matrix $D$ is a diagonal matrix. 
+
+Consider the relationshio with mendelian sampling
 
 The matrix $T$ traces the flow of genes from one generation to the other; in other words, it accounts only for direct (parent-offspring) relationships. 
 

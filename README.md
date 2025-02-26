@@ -12,10 +12,10 @@ the covariance among breeding values. $A$ is twice the coefficient of parentage.
 
 However, we can face memory bottlenecks, when we need to compute big pedigree.
 
-- 1) Pedigree
-- 2) Recursive method
-- 3) Thompson's method ?
-- 4) Henderson's method ?
+1) Pedigree
+2) Recursive method (Tabular)
+3) Thompson's method 
+4) Henderson's method 
 
 
 
