@@ -88,7 +88,7 @@ If both parents are unknown and are assumed unrelated:
 The relationship matrix can be expressed as $A = TDT^T$, where $T$ is a
 lower triangular matrix $D$ is a diagonal matrix.
 
-Consider the relationshio with mendelian sampling
+Consider the relationship with mendelian sampling
 
 The matrix $T$ traces the flow of genes from one generation to the
 other; in other words, it accounts only for direct (parent-offspring)
