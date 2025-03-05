@@ -14,8 +14,12 @@ Based on the path analysis of phenotypic values for pedigree members, Wrigth (19
 defined relationship coefficient $R$ between individuals $i$ and $j$ as the
 correlation between their genetic values (Gorjanc notes):
 
-$R_{i,j} = Cor(g_i,g_j)$
-$Cov(g_i,g_j)/sqr(Var(g_i)Var(g_j))$
+$$
+\begin{aligned}
+R_{i,j} = Cor(g_i,g_j) \\
+Cov(g_i,g_j)/sqr(Var(g_i)Var(g_j))
+\end{aligned}
+$$
 
 The Numerator relationship matrix $(A)$ describes the additive relationship among 
 individuals. $(A)$ is a symmetric and its diagonal elements represent twice 
@@ -51,9 +55,9 @@ library(package = "pedigreeTools")
 # 1) Create a pedigree
 
 ``` r
-ped = data.frame(iid = 1:7,
-                 fid = c(0, 0, 1, 1, 3, 1, 5), 
-                 mid = c(0, 0, 0, 2, 4, 4, 6))
+ped = data.frame(iid = 1:6,
+                 fid = c(0, 0, 1, 1, 4, 5), 
+                 mid = c(0, 0, 2, 0, 3, 2))
 
 (ped2 = pedigree(sire  = ped$fid, 
                  dam   = ped$mid,
@@ -105,7 +109,7 @@ If only one parent $s$ or $d$ is known:
 
 - The off-diagonal element:
 
-  $a_{ij} = a_{ij} = 0.5(a_{js/jd})$
+  $a_{ij} = a_{ji} = 0.5(a_{js/jd})$
 
 If neither parent is known:
 
@@ -129,7 +133,7 @@ The relationship matrix can be expressed as $A = TDT^T$ (Thompson, 1977), where 
 is a lower triangular matrix and $D$ is a diagonal matrix.
 
 ## Matrix T
-The matrix $T$ traces the flow of genes from one generation to the other. Thus, 
+The matrix $T$ is a lower triangle matrix  traces the flow of genes from one generation to the other. Thus, 
 for our small pedigree, we know that the expected and variance of the breeding 
 values are as follow:
 
@@ -153,7 +157,6 @@ a_6 \sim N(0, \sigma^2_{a}) & a_6 \mid a_5,a_2 \sim N\left(\frac{1}{2} (a_5 + a_
 \hline
 \end{array}
 $$
-
 
 Now, the system of equations is:
 
@@ -194,7 +197,7 @@ a_6
 \frac{1}{2} & \frac{1}{2} & 1 & 0 & 0 & 0 \\
 \frac{1}{2} & 0 & 0 & 1 & 0 & 0 \\
 \frac{1}{2} & \frac{1}{4} & \frac{1}{2} & \frac{1}{2} & 1 & 0 \\
-\frac{1}{4} & \frac{5}{8} & \frac{1}{4} & \frac{1}{4} & \frac{1}{2} & 1 
+\frac{1}{4} & \frac{1}{8} & \frac{1}{4} & \frac{1}{4} & \frac{1}{2} & 1
 \end{bmatrix}
 \begin{bmatrix}
 r_1 \\
@@ -206,23 +209,54 @@ r_6
 \end{bmatrix}
 $$
 
+We can get $T$ following the next rules: 
 
+If both parents $s$ and $d$ are known 
+ $t_{ij} = 0.5(t_{sj} + t_{dj})$
 
+If only want parent $s$ or $d$ is known
+ $t_{ij} = 0.5(t_{sj})$
 
-Consider the relationship with mendelian sampling
+If neither parent is known
+ $t_{ij} = 0$
 
-
-
-Rules for $i_{th}$:
-
-- $t_{ii} = 1$
-- $t_{ij} = 0.5(t_{sj} + t_{dj})$ \# If both parents (s and d) are known
-- $t_{ij} = 0.5(t_{sj})$ \# If only want parent (s) is known
-- $t_{ij} = 0$ \# If neither parent is known
+Diagonal is 
+ $t_{ii} = 1$
 
 ``` r
 (T = getT(ped2))
 ```
+Outcome:
+
+$$
+\begin{bmatrix}
+1 & 0 & 0 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 & 0 & 0 \\
+0.5 & 0.5 & 1 & 0 & 0 & 0 \\
+0.5 & 0 & 0 & 1 & 0 & 0 \\
+0.5 & 0.25 & 0.5 & 0.5 & 1 & 0 \\
+0.25 & 0.625 & 0.25 & 0.25 & 0.5 & 1 
+\end{bmatrix}
+$$
+
+## Matrix D
+The matrix $D$ is a diagonal matrix  
+
+
+
+$$
+\begin{bmatrix}
+a_1 \\
+a_2 \\
+a_3 \\
+a_4 \\
+a_5 \\
+a_6 
+\end{bmatrix}
+$$
+
+
+
 
     ## 7 x 7 sparse Matrix of class "dtCMatrix"
     ##       1    2    3   4   5   6 7
@@ -248,5 +282,8 @@ Mendelian sampling.
     
 # Definitions
 
+Mendelian sampling
+
 Marginal probability
+
 Conditionally probability
