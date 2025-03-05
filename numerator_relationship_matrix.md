@@ -25,7 +25,7 @@ animal $i$ (Wright, 1922).
 
 The off-diagonal elements, $a_{ij}$, equals the numerator of the coefficient 
 of relationship between animals $i$ and $j$. When multiplied by the additive
-genetic variance $\sigma_u$, $A_\sigma_u$ is the covariance among breeding
+genetic variance $\sigma^2_{a}$, $A\sigma^2_{a}$ is the covariance among breeding
 values. $A$ is twice the coefficient of coancestry (kinship).
 
 The inverse of the numerator relationship matrix is used for breeding values 
@@ -125,7 +125,7 @@ Then, from the example pedigree from above, A is:
 
 # 3) Decomposing the relationship matrix 
 
-The relationship matrix can be expressed as $A = TDT^'$ (Thompson, 1977), where $T$ 
+The relationship matrix can be expressed as $A = TDT^T$ (Thompson, 1977), where $T$ 
 is a lower triangular matrix and $D$ is a diagonal matrix.
 
 ## Matrix T
@@ -133,55 +133,50 @@ The matrix $T$ traces the flow of genes from one generation to the other. Thus,
 for our small pedigree, we know that the expected and variance of the breeding 
 values are as follow:
 
+
 $$
 \begin{array}{|c|c|}
 \hline
-Marginal & Conditional \\
+\textbf{Marginal} & \textbf{Conditional} \\
 \hline
-a_1 ~ N(0, \sigma^2_a) & - \\
+a_1 \sim N(0, \sigma^2_{a}) & - \\
 \hline
-a_2 ~ N(0, \sigma^2_a) & - \\
+a_2 \sim N(0, \sigma^2_{a}) & - \\
 \hline
-a_3 ~ N(0, \sigma^2_a) & a_3 | a_1,a_2 ~ N(1/2(a_1,a_2), 1/2\sigma^2_a)  \\
+a_3 \sim N(0, \sigma^2_{a}) & a_3 \mid a_1,a_2 \sim N\left(\frac{1}{2} (a_1 + a_2), \frac{1}{2} \sigma^2_{a} \right)  \\
 \hline
-a_4 ~ N(0, \sigma^2_a) & a_4 | a_1 ~ N(1/2(a_1), 1/2\sigma^2_a) & \\
+a_4 \sim N(0, \sigma^2_{a}) & a_4 \mid a_1 \sim N\left(\frac{1}{2} a_1, \frac{1}{2} \sigma^2_{a} \right) \\
 \hline
-a_5 ~ N(0, \sigma^2_a) & a_5 | a_4,a_3 ~ N(1/2(a_4,a_3), 1/2\sigma^2_a) \\
+a_5 \sim N(0, \sigma^2_{a}) & a_5 \mid a_4,a_3 \sim N\left(\frac{1}{2} (a_4 + a_3), \frac{1}{2} \sigma^2_{a} \right) \\
 \hline
-a_6 ~ N(0, \sigma^2_a) & a_6 | a_5,a_2 ~ N(1/2(a_5,a_2), 1/2\sigma^2_a) \\
+a_6 \sim N(0, \sigma^2_{a}) & a_6 \mid a_5,a_2 \sim N\left(\frac{1}{2} (a_5 + a_2), \frac{1}{2} \sigma^2_{a} \right) \\
 \hline
 \end{array}
 $$
 
+
 Now, the system of equations is:
 
 $$
-%
-a_1 = r_1
-%
-a_2 = r_2
-%
-a_3 = 1/2a_1 + 1/2a_2 + r_3
-%
-a_4 = 1/2a_1 + r_4
-%
-a_5 = 1/2a_4 + 1/2a_3 + r_5
-%
-    = 1/2(1/2a_1 + r_4) + 1/2(1/2a_1 + 1/2a_2 + r_3) + r_5
-%
-    = 1/4a_1 + 1/2r_4 + 1/4a_1 + 1/4a_2 + 1/2r_3
-%
-    = 1/2a_1 + 1/4a_2 + 1/2r_3 + 1/2r_4 + r_5
-%    
-a_6 = 1/2a_5 + 1/2a_2 + r_6
-    = 1/2(1/2a_4 + 1/2a_3 + r_5) + 1/2a_2 + r_6
-    = 1/4a_4 + 1/4a_3 + 1/2r_5 + 1/2a_2 + r_6
-    = 1/4(1/2a_1 + r_4) + 1/4(1/2a_1 + 1/2a_2 + r_3) + 1/2r_5 + 1/2a_2 + r_6
-    = 1/8a_1 + 1/4r_4 + 1/8a_1 + 1/8a_2 + 1/4r_3 + 1/2r_5 + 1/2a_2 + r_6
-    = 1/4a_1 + 5/8a_2 + 1/4r_3 + 1/4r_4 + 1/2r_5 + r_6
+\begin{aligned}
+a_1 &= r_1 \\
+a_2 &= r_2 \\
+a_3 &= \frac{1}{2} a_1 + \frac{1}{2} a_2 + r_3 \\
+a_4 &= \frac{1}{2} a_1 + r_4 \\
+a_5 &= \frac{1}{2} a_4 + \frac{1}{2} a_3 + r_5 \\
+    &= \frac{1}{2} \left(\frac{1}{2} a_1 + r_4 \right) + \frac{1}{2} \left(\frac{1}{2} a_1 + \frac{1}{2} a_2 + r_3 \right) + r_5 \\
+    &= \frac{1}{4} a_1 + \frac{1}{2} r_4 + \frac{1}{4} a_1 + \frac{1}{4} a_2 + \frac{1}{2} r_3 + r_5 \\
+    &= \frac{1}{2} a_1 + \frac{1}{4} a_2 + \frac{1}{2} r_3 + \frac{1}{2} r_4 + r_5 \\
+a_6 &= \frac{1}{2} a_5 + \frac{1}{2} a_2 + r_6 \\
+    &= \frac{1}{2} \left(\frac{1}{2} a_4 + \frac{1}{2} a_3 + r_5 \right) + \frac{1}{2} a_2 + r_6 \\
+    &= \frac{1}{4} a_4 + \frac{1}{4} a_3 + \frac{1}{2} r_5 + \frac{1}{2} a_2 + r_6 \\
+    &= \frac{1}{4} \left(\frac{1}{2} a_1 + r_4 \right) + \frac{1}{4} \left(\frac{1}{2} a_1 + \frac{1}{2} a_2 + r_3 \right) + \frac{1}{2} r_5 + \frac{1}{2} a_2 + r_6 \\
+    &= \frac{1}{8} a_1 + \frac{1}{4} r_4 + \frac{1}{8} a_1 + \frac{1}{8} a_2 + \frac{1}{4} r_3 + \frac{1}{2} r_5 + \frac{1}{2} a_2 + r_6 \\
+    &= \frac{1}{4} a_1 + \frac{5}{8} a_2 + \frac{1}{4} r_3 + \frac{1}{4} r_4 + \frac{1}{2} r_5 + r_6
+\end{aligned}
 $$
 
-Matrix form
+Matrix form:
 
 $$
 \begin{bmatrix}
@@ -196,12 +191,11 @@ a_6
 \begin{bmatrix}
 1 & 0 & 0 & 0 & 0 & 0 \\
 0 & 1 & 0 & 0 & 0 & 0 \\
-1/2 & 1/2 & 1 & 0 & 0 & 0 \\
-1/2 & 0 & 0 & 1 & 0 & 0 \\
-1/2 & 1/4 & 1/2 & 1/2 & 1 & 0 \\
-1/4 & 5/8 & 1/4 & 1/4 & 1/2 & 1 
+\frac{1}{2} & \frac{1}{2} & 1 & 0 & 0 & 0 \\
+\frac{1}{2} & 0 & 0 & 1 & 0 & 0 \\
+\frac{1}{2} & \frac{1}{4} & \frac{1}{2} & \frac{1}{2} & 1 & 0 \\
+\frac{1}{4} & \frac{5}{8} & \frac{1}{4} & \frac{1}{4} & \frac{1}{2} & 1 
 \end{bmatrix}
-
 \begin{bmatrix}
 r_1 \\
 r_2 \\
@@ -211,7 +205,6 @@ r_5 \\
 r_6 
 \end{bmatrix}
 $$
-
 
 
 
