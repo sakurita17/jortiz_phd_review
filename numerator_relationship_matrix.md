@@ -28,17 +28,14 @@ of relationship between animals {$i$} and {$j$}. When multiplied by the additive
 genetic variance {$\sigma_u$}, {$A_\sigma_u$} is the covariance among breeding
 values. {$A$} is twice the coefficient of coancestry (kinship).
 
-
-
+The inverse of the numerator relationship matrix is used for breeding values 
+computation, however as the size of the matrix increase we start to face compu-
+tational barrers, memory is a bottleneck for large pedigree but attemps to reduce
+memory usage increased the computational time. 
 
 # Objective
 
 To understand the numerator relationship matrix and method for its computation
-
-
-# Definition
-
-
 
 
 # Library
@@ -46,8 +43,10 @@ To understand the numerator relationship matrix and method for its computation
 For the aim of this exercise, I will use the library “pedigreeTools”:
 <https://github.com/Rpedigree/pedigreeTools>
 
-'library(package = "pedigreeTools")' # R package to create and create different pedigree
-                                   # features
+
+# Packages 
+
+library(package = "pedigreeTools") 
 
 
 # 1) Create a pedigree
@@ -61,47 +60,40 @@ ped = data.frame(iid = 1:7,
                  label = ped$iid))
 
                 
-
 # 2) Tabular method
 
-If both parents $s$ and $d$ of animal $i$ are known:
+Applying the tabular method require to order the pedigree ensuring parents appear
+before their progeny.Thus, the matrix {$A$} is formed following the nextrecursive 
+method: 
 
-- The diagonal elements $(a)_{ii}$ correspond to:
+If both parents of {$i^th$} individual are known, say $s$ and $d$
+
+- The diagonal element:
   $a_{ii} = 1 + F_i = 1 + 0.5(a_{sd})$
 
-- The off-diagonal element $a_{ji}$ correspond to:
-  $a_{ji} = a_{ij} = 0.5(a_{js} + a_{jd})$
+- The off-diagonal element:
+  $a_{ij} = a_{ji} = 0.5(a_{js} + a_{jd})$
 
-If only one parent $s$ or $d$ of animal $i$ is known:
+If only one parent $s$ or $d$ is known:
 
-- The diagonal elements $(a)_{ii}$ correspond to: $a_{ii} = 1$
+- The diagonal element: 
+  $a_{ii} = 1$
 
-- The off-diagonal element $a_{ji}$ correspond to:
-  $a_{ji} = a_{ij} = 0.5(a_{js/jd})$
+- The off-diagonal element:
+  $a_{ij} = a_{ij} = 0.5(a_{js/jd})$
 
-If both parents are unknown and are assumed unrelated:
+If neither parent is known:
 
-- The diagonal elements $(a)_{ii}$ correspond to: $a_{ii} = 1$
+- The diagonal element: 
+  $a_{ii} = 1$
 
-- The off-diagonal element $a_{ji}$ correspond to: $a_{ji} = a_{ij} = 0$
+- The off-diagonal element:
+  $a_{ij} = a_{ji} = 0$
 
-``` r
+Then, from the example pedigree from above, A is:
+
 (A = getA(ped2))
-```
 
-    ## 'as(<dtTMatrix>, "dtCMatrix")' is deprecated.
-    ## Use 'as(., "CsparseMatrix")' instead.
-    ## See help("Deprecated") and help("Matrix-deprecated").
-
-    ## 7 x 7 sparse Matrix of class "dsCMatrix"
-    ##       1    2     3      4       5       6       7
-    ## 1 1.000 .    0.500 0.5000 0.50000 0.75000 0.62500
-    ## 2 .     1.00 .     0.5000 0.25000 0.25000 0.25000
-    ## 3 0.500 .    1.000 0.2500 0.62500 0.37500 0.50000
-    ## 4 0.500 0.50 0.250 1.0000 0.62500 0.75000 0.68750
-    ## 5 0.500 0.25 0.625 0.6250 1.12500 0.56250 0.84375
-    ## 6 0.750 0.25 0.375 0.7500 0.56250 1.25000 0.90625
-    ## 7 0.625 0.25 0.500 0.6875 0.84375 0.90625 1.28125
 
 # 3) Thompson’s method
 
