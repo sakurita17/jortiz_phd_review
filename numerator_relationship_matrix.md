@@ -191,9 +191,7 @@ a_5 \\
 a_6 
 \end{bmatrix}
 $$
-$$
-=
-$$
+
 $$
 \begin{bmatrix}
 1 & 0 & 0 & 0 & 0 & 0 \\
