@@ -190,19 +190,16 @@ a_4 \\
 a_5 \\
 a_6 
 \end{bmatrix}
-$$
-
-$$
+\cdot
 \begin{bmatrix}
 1 & 0 & 0 & 0 & 0 & 0 \\
 0 & 1 & 0 & 0 & 0 & 0 \\
 \frac{1}{2} & \frac{1}{2} & 1 & 0 & 0 & 0 \\
 \frac{1}{2} & 0 & 0 & 1 & 0 & 0 \\
 \frac{1}{2} & \frac{1}{4} & \frac{1}{2} & \frac{1}{2} & 1 & 0 \\
-\frac{1}{4} & \frac{1}{8} & \frac{1}{4} & \frac{1}{4} & \frac{1}{2} & 1
+\frac{1}{8} & \frac{5}{8} & \frac{1}{4} & \frac{1}{4} & \frac{1}{2} & 1
 \end{bmatrix}
-$$
-$$
+\cdot
 \begin{bmatrix}
 r_1 \\
 r_2 \\
