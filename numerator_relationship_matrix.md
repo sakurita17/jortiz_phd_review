@@ -190,7 +190,7 @@ a_4 \\
 a_5 \\
 a_6 
 \end{bmatrix}
-\cdot
+\equal
 \begin{bmatrix}
 1 & 0 & 0 & 0 & 0 & 0 \\
 0 & 1 & 0 & 0 & 0 & 0 \\
