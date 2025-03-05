@@ -51,6 +51,7 @@ library(package = "pedigreeTools")
 
 # 1) Create a pedigree
 
+``` r
 ped = data.frame(iid = 1:7,
                  fid = c(0, 0, 1, 1, 3, 1, 5), 
                  mid = c(0, 0, 0, 2, 4, 4, 6))
@@ -58,7 +59,7 @@ ped = data.frame(iid = 1:7,
 (ped2 = pedigree(sire  = ped$fid, 
                  dam   = ped$mid,
                  label = ped$iid))
-
+```
                 
 # 2) Tabular method
 
