@@ -11,22 +11,22 @@ however was Malecot (1948) how defined relationship based on probabilities of
 individual genes at a locus being identical by descent.
 
 Based on the path analysis of phenotypic values for pedigree members, Wrigth (1922)
-defined relationship coefficient {$R$} between individuals {$i$} and {$j$} as the
+defined relationship coefficient $R$ between individuals $i$ and $j$ as the
 correlation between their genetic values (Gorjanc notes):
 
-{$R_{i,j} = Cor(g_i,g_j)$}
-{$Cov(g_i,g_j)/sqr(Var(g_i)Var(g_j))$}
+$R_{i,j} = Cor(g_i,g_j)$
+$Cov(g_i,g_j)/sqr(Var(g_i)Var(g_j))$
 
 The Numerator relationship matrix $(A)$ describes the additive relationship among 
 individuals. $(A)$ is a symmetric and its diagonal elements represent twice 
-the probability that two gametes taken at random from animal {$i$} will carry 
+the probability that two gametes taken at random from animal $i$ will carry 
 identical alleles by descent, in other words, the inbreeding coefficient of 
-animal {$i$} (Wright, 1922).
+animal $i$ (Wright, 1922).
 
-The off-diagonal elements, {$a_{ij}$}, equals the numerator of the coefficient 
-of relationship between animals {$i$} and {$j$}. When multiplied by the additive
-genetic variance {$\sigma_u$}, {$A_\sigma_u$} is the covariance among breeding
-values. {$A$} is twice the coefficient of coancestry (kinship).
+The off-diagonal elements, $a_{ij}$, equals the numerator of the coefficient 
+of relationship between animals $i$ and $j$. When multiplied by the additive
+genetic variance $\sigma_u$, $A_\sigma_u$ is the covariance among breeding
+values. $A$ is twice the coefficient of coancestry (kinship).
 
 The inverse of the numerator relationship matrix is used for breeding values 
 computation, however as the size of the matrix increase we start to face compu-
@@ -37,17 +37,16 @@ memory usage increased the computational time.
 
 To understand the numerator relationship matrix and method for its computation
 
-
 # Library
 
 For the aim of this exercise, I will use the library “pedigreeTools”:
 <https://github.com/Rpedigree/pedigreeTools>
 
-
 # Packages 
 
+```r
 library(package = "pedigreeTools") 
-
+```
 
 # 1) Create a pedigree
 
@@ -60,6 +59,29 @@ ped = data.frame(iid = 1:7,
                  dam   = ped$mid,
                  label = ped$iid))
 ```
+
+Output:
+
+$$
+\begin{array}{|c|c|c|}
+\hline
+idd & sire & dam \\
+\hline
+1 & NA & NA \\
+\hline
+2 & NA & NA \\
+\hline
+3 & 1 & 2 \\
+\hline
+4 & 1 & NA \\
+\hline
+5 & 4 & 3 \\
+\hline
+6 & 5 & 2 \\
+\hline
+\end{array}
+$$
+
                 
 # 2) Tabular method
 
@@ -77,18 +99,22 @@ If both parents of {$i^th$} individual are known, say $s$ and $d$
 
 If only one parent $s$ or $d$ is known:
 
-- The diagonal element: 
+- The diagonal element:
+
   $a_{ii} = 1$
 
 - The off-diagonal element:
+
   $a_{ij} = a_{ij} = 0.5(a_{js/jd})$
 
 If neither parent is known:
 
-- The diagonal element: 
+- The diagonal element:
+
   $a_{ii} = 1$
 
 - The off-diagonal element:
+
   $a_{ij} = a_{ji} = 0$
 
 Then, from the example pedigree from above, A is:
@@ -99,18 +125,90 @@ Then, from the example pedigree from above, A is:
 
 # 3) Decomposing the relationship matrix 
 
-The relationship matrix can be expressed as $A = TDT^T$ (Thompson, 1977), where $T$ 
+The relationship matrix can be expressed as $A = TDT^'$ (Thompson, 1977), where $T$ 
 is a lower triangular matrix and $D$ is a diagonal matrix.
 
 ## Matrix T
+The matrix $T$ traces the flow of genes from one generation to the other. Thus, 
+for our small pedigree, we know that the expected and variance of the breeding 
+values are as follow:
 
+$$
+\begin{array}{|c|c|}
+\hline
+Marginal & Conditional \\
+\hline
+a_1 ~ N(0, \sigma^2_a) & - \\
+\hline
+a_2 ~ N(0, \sigma^2_a) & - \\
+\hline
+a_3 ~ N(0, \sigma^2_a) & a_3 | a_1,a_2 ~ N(1/2(a_1,a_2), 1/2\sigma^2_a)  \\
+\hline
+a_4 ~ N(0, \sigma^2_a) & a_4 | a_1 ~ N(1/2(a_1), 1/2\sigma^2_a) & \\
+\hline
+a_5 ~ N(0, \sigma^2_a) & a_5 | a_4,a_3 ~ N(1/2(a_4,a_3), 1/2\sigma^2_a) \\
+\hline
+a_6 ~ N(0, \sigma^2_a) & a_6 | a_5,a_2 ~ N(1/2(a_5,a_2), 1/2\sigma^2_a) \\
+\hline
+\end{array}
+$$
 
+Now, the system of equations is:
+
+$$
+%
+a_1 = r_1
+%
+a_2 = r_2
+%
+a_3 = 1/2a_1 + 1/2a_2 + r_3
+%
+a_4 = 1/2a_1 + r_4
+%
+a_5 = 1/2a_4 + 1/2a_3 + r_5
+%
+    = 1/2(1/2a_1 + r_4) + 1/2(1/2a_1 + 1/2a_2 + r_3) + r_5
+%
+    = 1/4a_1 + 1/2r_4 + 1/4a_1 + 1/4a_2 + 1/2r_3
+%
+    = 1/2a_1 + 1/4a_2 + 1/2r_3 + 1/2r_4 + r_5
+%    
+a_6 = 1/2a_5 + 1/2a_2 + r_6
+    = 1/2(1/2a_4 + 1/2a_3 + r_5) + 1/2a_2 + r_6
+    = 1/4a_4 + 1/4a_3 + 1/2r_5 + 1/2a_2 + r_6
+    = 1/4(1/2a_1 + r_4) + 1/4(1/2a_1 + 1/2a_2 + r_3) + 1/2r_5 + 1/2a_2 + r_6
+    = 1/8a_1 + 1/4r_4 + 1/8a_1 + 1/8a_2 + 1/4r_3 + 1/2r_5 + 1/2a_2 + r_6
+    = 1/4a_1 + 5/8a_2 + 1/4r_3 + 1/4r_4 + 1/2r_5 + r_6
+$$
+
+Matrix form
 
 $$
 \begin{bmatrix}
-1 & 2 & 3 & 4 \\
-5 & 6 & 7 & 8 \\
-9 & 10 & 11 & 12
+a_1 \\
+a_2 \\
+a_3 \\
+a_4 \\
+a_5 \\
+a_6 
+\end{bmatrix}
+=
+\begin{bmatrix}
+1 & 0 & 0 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 & 0 & 0 \\
+1/2 & 1/2 & 1 & 0 & 0 & 0 \\
+1/2 & 0 & 0 & 1 & 0 & 0 \\
+1/2 & 1/4 & 1/2 & 1/2 & 1 & 0 \\
+1/4 & 5/8 & 1/4 & 1/4 & 1/2 & 1 
+\end{bmatrix}
+
+\begin{bmatrix}
+r_1 \\
+r_2 \\
+r_3 \\
+r_4 \\
+r_5 \\
+r_6 
 \end{bmatrix}
 $$
 
@@ -120,9 +218,7 @@ $$
 
 Consider the relationship with mendelian sampling
 
-The matrix $T$ traces the flow of genes from one generation to the
-other; in other words, it accounts only for direct (parent-offspring)
-relationships.
+
 
 Rules for $i_{th}$:
 
@@ -154,3 +250,10 @@ Mendelian sampling.
 
     ##       1       2       3       4       5       6       7 
     ## 1.00000 1.00000 0.75000 0.50000 0.50000 0.50000 0.40625
+    
+    
+    
+# Definitions
+
+Marginal probability
+Conditionally probability
