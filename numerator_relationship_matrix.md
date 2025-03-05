@@ -4,6 +4,31 @@ Numerator relationship matrix
 
 # Introduction
 
+Additive relationships are a measure of the proportion of genes, which are identical
+by descent, which are expected to be shared by two animals. The idea of tracing 
+paths to establish the relationship among animals was introduced by Wright (1921), 
+however was Malecot (1948) how defined relationship based on probabilities of 
+individual genes at a locus being identical by descent.
+
+Based on the path analysis of phenotypic values for pedigree members, Wrigth (1922)
+defined relationship coefficient {$R$} between individuals {$i$} and {$j$} as the
+correlation between their genetic values:
+
+{$R_{i,j} = Cor(g_i,g_j)$}
+{$Cov(g_i,g_j)/sqr(Var(g_i)Var(g_j))$}
+
+The Numerator relationship matrix $(A)$ describes the additive relationship among 
+individuals. $(A)$ is a symmetric and its diagonal elements represent twice 
+the probability that two gametes taken at random from animal {$i$} will carry 
+identical alleles by descent, in other words, the inbreeding coefficient of 
+animal {$i$} (Wright, 1922).
+
+The off-diagonal elements, {$a_{ij}$}, equals the numerator of the coefficient 
+of relationship between animals {$i$} and {$j$}. When multiplied by the additive
+genetic variance {$\sigma_u$}, {$A_\sigma_u$} is the covariance among breeding
+values. {$A$} is twice the coefficient of coancestry (kinship).
+
+
 
 
 # Objective
@@ -21,7 +46,7 @@ To understand the numerator relationship matrix and method for its computation
 For the aim of this exercise, I will use the library “pedigreeTools”:
 <https://github.com/Rpedigree/pedigreeTools>
 
-library(package = "pedigreeTools") # R package to create and create different pedigree
+'library(package = "pedigreeTools")' # R package to create and create different pedigree
                                    # features
 
 
