@@ -61,7 +61,7 @@ $a_{ji} = a_{ij} = 0$
 (A = getA(ped2))
 ```
 
-# 3) Thompson's method
+# 3) Decomposition of A matrix
 
 The relationship matrix can be expressed as $A = TDT^T$, where $T$ is a lower triangular matrix $D$ is a diagonal matrix. 
 

@@ -12,7 +12,7 @@ individual genes at a locus being identical by descent.
 
 Based on the path analysis of phenotypic values for pedigree members, Wrigth (1922)
 defined relationship coefficient {$R$} between individuals {$i$} and {$j$} as the
-correlation between their genetic values:
+correlation between their genetic values (Gorjanc notes):
 
 {$R_{i,j} = Cor(g_i,g_j)$}
 {$Cov(g_i,g_j)/sqr(Var(g_i)Var(g_j))$}
@@ -93,13 +93,30 @@ If neither parent is known:
 
 Then, from the example pedigree from above, A is:
 
+```r
 (A = getA(ped2))
+```
+
+# 3) Decomposing the relationship matrix 
+
+The relationship matrix can be expressed as $A = TDT^T$ (Thompson, 1977), where $T$ 
+is a lower triangular matrix and $D$ is a diagonal matrix.
+
+## Matrix T
 
 
-# 3) Thompson’s method
 
-The relationship matrix can be expressed as $A = TDT^T$, where $T$ is a
-lower triangular matrix $D$ is a diagonal matrix.
+$$
+\begin{bmatrix}
+1 & 2 & 3 & 4 \\
+5 & 6 & 7 & 8 \\
+9 & 10 & 11 & 12
+\end{bmatrix}
+$$
+
+
+
+
 
 Consider the relationship with mendelian sampling
 
