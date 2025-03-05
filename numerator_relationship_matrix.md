@@ -2,25 +2,28 @@ Numerator relationship matrix
 ================
 2025-02-24
 
+# Introduction
+
+
+
 # Objective
 
-This exercise want to recreate the concept and computation around the
-Numerator relationship matrix and all three methods to its estimation.
+To understand the numerator relationship matrix and method for its computation
+
+
+# Definition
+
+
+
 
 # Library
 
 For the aim of this exercise, I will use the library “pedigreeTools”:
 <https://github.com/Rpedigree/pedigreeTools>
 
-``` r
 library(package = "pedigreeTools") # R package to create and create different pedigree
                                    # features
-```
 
-# 1) Create a pedigree
-
-``` r
-# Ax = b
 
 # 1) Create a pedigree
 
@@ -29,18 +32,10 @@ ped = data.frame(iid = 1:7,
                  mid = c(0, 0, 0, 2, 4, 4, 6))
 
 (ped2 = pedigree(sire  = ped$fid, 
-                dam   = ped$mid,
-                label = ped$iid))
-```
+                 dam   = ped$mid,
+                 label = ped$iid))
 
-    ##   sire  dam
-    ## 1 <NA> <NA>
-    ## 2 <NA> <NA>
-    ## 3    1 <NA>
-    ## 4    1    2
-    ## 5    3    4
-    ## 6    1    4
-    ## 7    5    6
+                
 
 # 2) Tabular method
 
