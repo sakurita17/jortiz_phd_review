@@ -32,11 +32,6 @@ of relationship between animals $i$ and $j$. When multiplied by the additive
 genetic variance $\sigma^2_{a}$, $A\sigma^2_{a}$ is the covariance among breeding
 values. $A$ is twice the coefficient of coancestry (kinship).
 
-The inverse of the numerator relationship matrix is used for breeding values 
-computation, however as the size of the matrix increase we start to face compu-
-tational barrers, memory is a bottleneck for large pedigree but attemps to reduce
-memory usage increased the computational time. 
-
 # Objective
 
 To understand the numerator relationship matrix and method for its computation
@@ -275,6 +270,20 @@ A_GCD
     
 # Cholesky decomposition 
 
+Using the concepts of Cholesky decomposition, $A$ can be written as $A$ = LL', 
+where $L$ is a lower triangle matrix with non-zero diagonal el$A$. 
+
+
+
+
+
+# Inverse of the relationship matrix 
+
+The prediction of breeding value requires the inverse of relationship matrix, 
+
+
+
+
 
 # Definitions
 
@@ -283,3 +292,6 @@ Mendelian sampling
 Marginal probability
 
 Conditionally probability
+
+Cholesky decomposition
+
