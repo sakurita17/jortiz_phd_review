@@ -127,7 +127,7 @@ Then, from the example pedigree from above, A is:
 (A = getA(ped2))
 ```
 
-# 3) Decomposing the relationship matrix 
+# 3) Generalised Cholesky decomposition 
 
 The relationship matrix can be expressed as $A = TDT^T$ (Thompson, 1977), where $T$ 
 is a lower triangular matrix and $D$ is a diagonal matrix.
@@ -241,46 +241,41 @@ $$
 $$
 
 ## Matrix D
-The matrix $D$ is a diagonal matrix  
-
-
+The diagonal matrix $D$ is the variance and covariance matrix for Mendelian sampling. 
+The Mendelian sampling $(m)$ for an animal $i$ with breeding value $a_i$ and $a_s$
+and $a_d$ as breeding values for its sire and dam, respectively, is:
 
 $$
-\begin{bmatrix}
-a_1 \\
-a_2 \\
-a_3 \\
-a_4 \\
-a_5 \\
-a_6 
-\end{bmatrix}
+\begin{aligned}
+m_i = a_i - 0.5(a_s + a_d)
+\end{aligned}
 $$
 
-
-
-
-    ## 7 x 7 sparse Matrix of class "dtCMatrix"
-    ##       1    2    3   4   5   6 7
-    ## 1 1.000 .    .    .   .   .   .
-    ## 2 .     1.00 .    .   .   .   .
-    ## 3 0.500 .    1.00 .   .   .   .
-    ## 4 0.500 0.50 .    1.0 .   .   .
-    ## 5 0.500 0.25 0.50 0.5 1.0 .   .
-    ## 6 0.750 0.25 .    0.5 .   1.0 .
-    ## 7 0.625 0.25 0.25 0.5 0.5 0.5 1
-
-The diagonal matrix $D$ is the variance and covariance matrix for
-Mendelian sampling.
+Diagonal elements of $D$ are 1 for pedigree founders, $0.5 - 0.25(F_s + Fd)$ if both
+parents of animal $i$ are known and $0.75 - 0.25(F_s)$ if only one parent $s$ is
+known.
 
 ``` r
 (D = getD(ped2))
 ```
+$$
+\begin{bmatrix}
+1.00000 & 1.00000 & 0.75000 & 0.50000 & 0.50000 & 0.50000 & 0.40625
+\end{bmatrix}
+$$
 
-    ##       1       2       3       4       5       6       7 
-    ## 1.00000 1.00000 0.75000 0.50000 0.50000 0.50000 0.40625
+Finally, we can compute $A$
+
+```r
+(A_GCD =  T %*% diag(D) %*% Matrix::t(T))
+```
+
+A
+A_GCD
     
-    
-    
+# Cholesky decomposition 
+
+
 # Definitions
 
 Mendelian sampling
