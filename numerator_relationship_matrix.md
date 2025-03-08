@@ -229,7 +229,6 @@ Diagonal is
 For instance, for the pedigree above:
 
 $$
-\begin{equation}
 \begin{aligned}
 
 T_{2,1} \= 0 \\
@@ -290,7 +289,6 @@ T_{6,5} &= 0.5(T_{5,5} + T_{2,5})
          = 0.5(1 + 0) 
          = 0.5 \\
 \end{aligned}
-\end{equation}
 $$
 We use the function getT from pedigreeTools to get the matrix T
 
