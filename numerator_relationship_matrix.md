@@ -359,14 +359,13 @@ where,
 - L^{-1} is the inverse of the triangular matrix $L$
 - L^{-T} is the inverse of the transpose of $L$, which is the transpose of L^{-1}
 
+Note that 
+$L = T %8% sqrt(D)$
 
 
-
-
-
-
-
-
+```r
+getAInv(ped2)
+```
 
 # Definitions
 
