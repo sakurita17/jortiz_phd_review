@@ -32,6 +32,7 @@ of relationship between animals $i$ and $j$. When multiplied by the additive
 genetic variance $\sigma^2_{a}$, $A\sigma^2_{a}$ is the covariance among breeding
 values. $A$ is twice the coefficient of coancestry (kinship).
 
+
 # Packages 
 
 ```r

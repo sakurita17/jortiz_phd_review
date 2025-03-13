@@ -1,95 +1,344 @@
 ---
-title: "Untitled"
+title: "Numerator Relationship Matrix"
 output: github_document
 ---
+================
+2025-02-24
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-# Objective
-Understanding the Numerator relationship matrix and method for its computation
-
-# Library
-For the aim of this exercise, I will use the library "pedigreeTools": https://github.com/Rpedigree/pedigreeTools
-
+# Load R packages
 
 ```{r}
-library(package = "pedigreeTools") # R package to create and create different pedigree
-                                   # features
+library(package = "pedigreeTools") 
+library(package = "Matrix")
 ```
+
+# Introduction
+
+The additive relationships measure the proportion of genes that are identical by descendant and are expected to be shared by two animals (Wright, 1921). However, Malecot (1948) was a question of how defined relationship-based probabilities of individual genes at a locus being identical by descent.
+
+Based on the path analysis of the phenotypic values of the members of the pedigree, Wright (1922) defined the relationship coefficient $R$ between individual $i$ and $j$ as the correlation between their genetic value (Gregor notes).
+
+$$
+\begin{aligned}
+R_{i,j} &= \text{Cor}(g_i,g_j) \\
+        &= \frac{\text{Cov}(g_i,g_j)}{\sqrt{\text{Var}(g_i) \cdot \text{Var}(g_j)}}
+\end{aligned}
+$$
+
+The numerator relationship matrix $A$ describes the additive relationship among individuals.
+$A$ is symmetric and its diagonal elements represent twice the probability that two gametes taken at random from animal $i$ will carry carry identical by descent alleles, in other words, the inbreeding coefficient of animal $i$ (Wright, 1922)
+
+The off-diagonal elements, $a_{ij}$, equals the numerator of the coefficient of relationship between animals $i$ and $j$. When multiplied by the additive genetic variance $\sigma^{2}_a$, $A\sigma^{2}_a$ is the covariance among breeding values. $A$ is twice the coefficient of coancestry (kinship)
+
+
+For the aim of this exercise, I will use the library “pedigreeTools”:
+<https://github.com/Rpedigree/pedigreeTools>
 
 # 1) Create a pedigree
 
+First we will creat a pedigree
+
 ```{r}
-ped = data.frame(iid = 1:7,
-                 fid = c(0, 0, 1, 1, 3, 1, 5), 
-                 mid = c(0, 0, 0, 2, 4, 4, 6))
+ped = data.frame(iid = 1:6,
+                 fid = c(0, 0, 1, 1, 4, 5), 
+                 mid = c(0, 0, 2, 0, 3, 2))
 
 (ped2 = pedigree(sire  = ped$fid, 
-                dam   = ped$mid,
-                label = ped$iid))
+                 dam   = ped$mid,
+                 label = ped$iid))
 ```
 
 # 2) Tabular method
 
-If both parents $s$ and $d$ of animal $i$ are known:
+The matrix A can be computed using path coefficients, but a recursive method that is suitable for computerization was described by Henderson (1976). Initially, animals in the pedigree are coded 1 to n and ordered such that parents precede their progeny. The following rules are then employed to compute A. 
 
-- The diagonal elements $(a)_{ii}$ correspond to:
-$a_{ii} = 1 + F_i = 1 + 0.5(a_{sd})$
 
-- The off-diagonal element $a_{ji}$ correspond to:
-$a_{ji} = a_{ij} = 0.5(a_{js} + a_{jd})$
+$$
+\[
+\begin{array}{|l|c|c|}
+\hline
+\textbf{Condition} & \textbf{Diagonals} & \textbf{Off-diagonals} \\ 
+\hline
+\multirow{2}{*}{If both parents are known} 
+ & a_{ii} = 2 + F_i + 0.5(a_{sd}) & a_{ij \vee ji} = 0.5(a_{js} + a_{jd}) \\ 
+\hline
+\multirow{2}{*}{If only one parent is known} 
+ & a_{ii} = 1 & a_{ij \vee ji} = 0.5(a_{js}) \\ 
+\hline
+\multirow{2}{*}{If neither parent is known} 
+ & a_{ii} = 1 & a_{ij \vee ji} = 0 \\ 
+\hline
+\end{array}
+\]
+$$
+Manually, we can compute this as
 
-If only one parent $s$ or $d$ of animal $i$ is known:
 
-- The diagonal elements $(a)_{ii}$ correspond to:
-$a_{ii} = 1$
-
-- The off-diagonal element $a_{ji}$ correspond to:
-$a_{ji} = a_{ij} = 0.5(a_{js/jd})$
-
-If both parents are unknown and are assumed unrelated:
-
-- The diagonal elements $(a)_{ii}$ correspond to:
-$a_{ii} = 1$
-
-- The off-diagonal element $a_{ji}$ correspond to:
-$a_{ji} = a_{ij} = 0$
+However, we can use the function $getA$ from the R package $pedigreeTools$
 
 ```{r}
 (A = getA(ped2))
 ```
+# 3) Generalised Cholesky decomposition 
 
-# 3) Decomposition of A matrix
 
-The relationship matrix can be expressed as $A = TDT^T$, where $T$ is a lower triangular matrix $D$ is a diagonal matrix. 
 
-Consider the relationship with mendelian sampling
 
-The matrix $T$ traces the flow of genes from one generation to the other; in other words, it accounts only for direct (parent-offspring) relationships. 
 
-Rules for $i_{th}$: 
 
-- $t_{ii} = 1$
-- $t_{ij} = 0.5(t_{sj} + t_{dj})$ # If both parents (s and d) are known
-- $t_{ij} = 0.5(t_{sj})$ # If only want parent (s) is known
-- $t_{ij} = 0$ # If neither parent is known
 
-```{r}
+The prediction of breeding values requires the inverse of the relationship matrix, 
+$A^-1$. This could be obtained by setting up $A$ by the recursive method and inverting
+it. 
+
+# 3) 
+
+The relationship matrix can be expressed as $A = TDT^T$ (Thompson, 1977), where $T$ 
+is a lower triangular matrix and $D$ is a diagonal matrix.
+
+## Matrix T
+The matrix $T$ is a lower triangle matrix  traces the flow of genes from one generation to the other. Thus, 
+for our small pedigree, we know that the expected and variance of the breeding 
+values are as follow:
+
+$$
+\[
+\begin{array}{|c|p{8cm}|}
+\hline
+\textbf{Marginal} & \textbf{Conditional} \\
+\hline
+a_1 \sim N(0, \sigma^2_{a}) & - \\
+\hline
+a_2 \sim N(0, \sigma^2_{a}) & - \\
+\hline
+a_3 \sim N(0, \sigma^2_{a}) & \(a_3 \mid a_1,a_2 \sim N\left(\frac{1}{2} (a_1 + a_2), \frac{1}{2} \sigma^2_{a} \right)\) \\
+\hline
+a_4 \sim N(0, \sigma^2_{a}) & \(a_4 \mid a_1 \sim N\left(\frac{1}{2} a_1, \frac{1}{2} \sigma^2_{a} \right)\) \\
+\hline
+a_5 \sim N(0, \sigma^2_{a}) & \(a_5 \mid a_4,a_3 \sim N\left(\frac{1}{2} (a_4 + a_3), \frac{1}{2} \sigma^2_{a} \right)\) \\
+\hline
+a_6 \sim N(0, \sigma^2_{a}) & \(a_6 \mid a_5,a_2 \sim N\left(\frac{1}{2} (a_5 + a_2), \frac{1}{2} \sigma^2_{a} \right)\) \\
+\hline
+\end{array}
+\]
+$$
+
+Now, the system of equations is:
+
+$$
+\begin{aligned}
+a_1 &= r_1 \\
+a_2 &= r_2 \\
+a_3 &= \frac{1}{2} a_1 + \frac{1}{2} a_2 + r_3 \\
+a_4 &= \frac{1}{2} a_1 + r_4 \\
+a_5 &= \frac{1}{2} a_4 + \frac{1}{2} a_3 + r_5 \\
+    &= \frac{1}{2} \left(\frac{1}{2} a_1 + r_4 \right) + \frac{1}{2} \left(\frac{1}{2} a_1 + \frac{1}{2} a_2 + r_3 \right) + r_5 \\
+    &= \frac{1}{4} a_1 + \frac{1}{2} r_4 + \frac{1}{4} a_1 + \frac{1}{4} a_2 + \frac{1}{2} r_3 + r_5 \\
+    &= \frac{1}{2} a_1 + \frac{1}{4} a_2 + \frac{1}{2} r_3 + \frac{1}{2} r_4 + r_5 \\
+a_6 &= \frac{1}{2} a_5 + \frac{1}{2} a_2 + r_6 \\
+    &= \frac{1}{2} \left(\frac{1}{2} a_4 + \frac{1}{2} a_3 + r_5 \right) + \frac{1}{2} a_2 + r_6 \\
+    &= \frac{1}{4} a_4 + \frac{1}{4} a_3 + \frac{1}{2} r_5 + \frac{1}{2} a_2 + r_6 \\
+    &= \frac{1}{4} \left(\frac{1}{2} a_1 + r_4 \right) + \frac{1}{4} \left(\frac{1}{2} a_1 + \frac{1}{2} a_2 + r_3 \right) + \frac{1}{2} r_5 + \frac{1}{2} a_2 + r_6 \\
+    &= \frac{1}{8} a_1 + \frac{1}{4} r_4 + \frac{1}{8} a_1 + \frac{1}{8} a_2 + \frac{1}{4} r_3 + \frac{1}{2} r_5 + \frac{1}{2} a_2 + r_6 \\
+    &= \frac{1}{4} a_1 + \frac{5}{8} a_2 + \frac{1}{4} r_3 + \frac{1}{4} r_4 + \frac{1}{2} r_5 + r_6
+\end{aligned}
+$$
+
+Matrix form:
+
+$$
+\begin{bmatrix}
+a_1 \\
+a_2 \\
+a_3 \\
+a_4 \\
+a_5 \\
+a_6 
+\end{bmatrix}
+\=
+\begin{bmatrix}
+1 & 0 & 0 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 & 0 & 0 \\
+\frac{1}{2} & \frac{1}{2} & 1 & 0 & 0 & 0 \\
+\frac{1}{2} & 0 & 0 & 1 & 0 & 0 \\
+\frac{1}{2} & \frac{1}{4} & \frac{1}{2} & \frac{1}{2} & 1 & 0 \\
+\frac{1}{8} & \frac{5}{8} & \frac{1}{4} & \frac{1}{4} & \frac{1}{2} & 1
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+r_1 \\
+r_2 \\
+r_3 \\
+r_4 \\
+r_5 \\
+r_6 
+\end{bmatrix}
+$$
+
+We can get $T$ following the next rules, 
+
+If both parents $s$ and $d$ are known 
+ $t_{ij} = 0.5(t_{sj} + t_{dj})$
+
+If only want parent $s$ or $d$ is known
+ $t_{ij} = 0.5(t_{sj})$
+
+If neither parent is known
+ $t_{ij} = 0$
+
+Diagonal is 
+ $t_{ii} = 1$
+ 
+For instance, for the pedigree above:
+
+$$
+\begin{aligned}
+T_{2,1} &= 0 \\
+T_{3,1} &= 0.5(T_{1,1} + T_{2,1}) = 0.5(1 + 0) = 0.5 \\
+T_{3,2} &= 0.5(T_{1,2} + T_{2,2}) = 0.5(0 + 1) = 0.5 \\
+T_{4,1} &= 0.5(T_{1,1}) = 0.5(1) = 0.5 \\
+T_{4,2} &= 0.5(T_{2,1}) = 0.5(0) = 0 \\
+T_{4,3} &= 0.5(T_{3,1}) = 0.5(0.5) = 0.25 \\
+T_{5,1} &= 0.5(T_{4,1} + T_{3,1}) = 0.5(0.5 + 0.5) = 0.5 \\
+T_{5,2} &= 0.5(T_{4,2} + T_{3,2}) = 0.5(0 + 0.5) = 0.25 \\
+T_{5,3} &= 0.5(T_{4,3} + T_{3,3}) = 0.5(0 + 1) = 0.5 \\
+T_{5,4} &= 0.5(T_{4,4} + T_{3,4}) = 0.5(1 + 0) = 0.5 \\
+T_{6,1} &= 0.5(T_{5,1} + T_{2,1}) = 0.5(0.5 + 0) = 0.25 \\
+T_{6,2} &= 0.5(T_{5,2} + T_{2,2}) = 0.5(0.25 + 1) = 0.625 \\
+T_{6,3} &= 0.5(T_{5,3} + T_{2,3}) = 0.5(0.5 + 0) = 0.25 \\
+T_{6,4} &= 0.5(T_{5,4} + T_{2,4}) = 0.5(0.5 + 0) = 0.25 \\
+T_{6,5} &= 0.5(T_{5,5} + T_{2,5}) = 0.5(1 + 0) = 0.5 
+\end{aligned}
+$$
+We use the function getT from pedigreeTools to get the matrix T
+
+``` r
 (T = getT(ped2))
 ```
+Outcome:
 
+$$
+\begin{bmatrix}
+1 & 0 & 0 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 & 0 & 0 \\
+0.5 & 0.5 & 1 & 0 & 0 & 0 \\
+0.5 & 0 & 0 & 1 & 0 & 0 \\
+0.5 & 0.25 & 0.5 & 0.5 & 1 & 0 \\
+0.25 & 0.625 & 0.25 & 0.25 & 0.5 & 1 
+\end{bmatrix}
+$$
+
+## Matrix D
 The diagonal matrix $D$ is the variance and covariance matrix for Mendelian sampling. 
+The Mendelian sampling $(m)$ for an animal $i$ with breeding value $a_i$ and $a_s$
+and $a_d$ as breeding values for its sire and dam, respectively, is:
 
+$$
+\begin{aligned}
+m_i = a_i - 0.5(a_s + a_d)
+\end{aligned}
+$$
 
-```{r}
+Diagonal elements of $D$ are 1 for pedigree founders, $0.5 - 0.25(F_s + Fd)$ if both
+parents of animal $i$ are known and $0.75 - 0.25(F_s)$ if only one parent $s$ is
+known.
+
+Thus, the diagonal matrix for our example is:
+
+$$
+\begin{equation}
+\begin{aligned}
+d_{1,1} &= 1 \\
+
+d_{2,2} &= 1 \\
+
+d_{3,3} &= 0.5 - 0.25(F_1 + F_2) 
+         = 0.5 - 0.25(0)
+         = 0 \\
+
+d_{4,4} &= 0.75 - 0.25(F_1) 
+         = 0.75 - 0.25(0)
+         = 0.75 \\
+
+d_{5,5} &= 0.5 - 0.25(F_4 + F_3) 
+         = 0.5 - 0.25(0 + 0)
+         = 0.5 \\
+
+d_{6,6} &= 0.5 - 0.25(F_5 + F_2) 
+         = 0.5 - 0.25(0.125 + 0)
+         = 0.46875
+
+\end{aligned}
+\end{equation}
+$$
+
+``` r
 (D = getD(ped2))
+```
+$$
+\begin{bmatrix}
+1.00000 & 1.00000 & 0.50000 & 0.75000 & 0.50000 & 0.46875 
+\end{bmatrix}
+$$
+
+Finally, we can compute $A$
+
+```r
+(A_GCD =  T %*% diag(D) %*% Matrix::t(T))
+```
+    
+# Cholesky decomposition 
+
+Using the concepts of Cholesky decomposition, $A$ can be written as $A$ = LL', 
+where $L$ is a lower triangle matrix with non-zero diagonal (Henderson, 1975). 
+Quaas (1976) presented a strategy for obtaining the diagonal elements of A while
+computing A−1 without setting up the relationship matrix.
+
+```r
+(L = t(relfactor(ped2)))
 ```
 
 
+```r
+(A_chol = L %*% t(L)) 
+```
+
+# Inverse of the relationship matrix 
+
+If $A = LL^T$, where $L$ is a lower triangular and $L^T$ is its transpose, then 
+then the inverse of $A$ can be computed as follows:
+
+$A^-1 = (LL^T)^-1$
+
+Using the property of matrix inversion:
+
+$(LL^T) = (L^T)^-1L^-1$
+
+Thus, 
+
+$A^-1 = (L^T)^-1L^-1$
+
+where, 
+- L^{-1} is the inverse of the triangular matrix $L$
+- L^{-T} is the inverse of the transpose of $L$, which is the transpose of L^{-1}
+
+Note that 
+$L = T %8% sqrt(D)$
 
 
+```r
+getAInv(ped2)
+```
 
+# Definitions
 
+Mendelian sampling
+
+Marginal probability
+
+Conditionally probability
+
+Cholesky decomposition
+
+Matrix properties
 
