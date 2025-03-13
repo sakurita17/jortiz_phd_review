@@ -79,19 +79,38 @@ However, we can use the function $getA$ from the R package $pedigreeTools$
 ```{r}
 (A = getA(ped2))
 ```
-# 3) Generalised Cholesky decomposition 
+# 3) Cholesky decomposition 
+ As the recursive method for computing $A$ can be demanding, Henderson (1975) proposed the Cholesky decomposition to build $A$. According to theory a matrix, as $A$ is symmetric and positive defined, it can be decomposed as:
+ 
+$$
+\begin{aligned}
+A &= LL'\\
+\end{aligned}
+$$ 
 
+Where
 
+$L$ is a lower triangular matrix, and
+$L'$ is its transpose
 
+Althoug, there are some rules to manually compute L, here we are going to use the function $getL$ from the R package $pedigreeTools$
 
+```{r}
+(L = t(getL(ped2)))
+```
+Then, 
 
+```{r}
+(A_chol = L %*% t(L))
+A
+```
 
+Note that $LL' = L'L$ only if $L$ is orthogonal. Remember that a matix is defined orthogonal if  $LL' = L'L = I$
 
-The prediction of breeding values requires the inverse of the relationship matrix, 
-$A^-1$. This could be obtained by setting up $A$ by the recursive method and inverting
-it. 
+# 4) Generalized cholesky decomposition
 
-# 3) 
+Applying the LDL factorization, A = TDT′, where T is a lower triangle matrix, and D is a diagonal matrix. In this method (Thompson, 1977), T and D matrices required to calculate A are derived indirectly (i.e., no direct factorization or decomposition).
+
 
 The relationship matrix can be expressed as $A = TDT^T$ (Thompson, 1977), where $T$ 
 is a lower triangular matrix and $D$ is a diagonal matrix.
@@ -329,6 +348,11 @@ $L = T %8% sqrt(D)$
 ```r
 getAInv(ped2)
 ```
+
+The prediction of breeding values requires the inverse of the relationship matrix, 
+$A^-1$. This could be obtained by setting up $A$ by the recursive method and inverting
+it. 
+
 
 # Definitions
 
