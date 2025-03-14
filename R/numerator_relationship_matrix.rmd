@@ -196,19 +196,26 @@ $$
 
 We can get $T$ following the next rules, 
 
-If both parents $s$ and $d$ are known 
- $t_{ij} = 0.5(t_{sj} + t_{dj})$
+$$
+\[
+\begin{array}{|l|c|c|}
+\hline
+\textbf{Condition} & \textbf{Diagonals} & \textbf{Off-diagonals} \\ 
+\hline
+\multirow{2}{*}{If both parents are known} 
+ & a_{ii} = 1 & t_{ij} = 0.5(t_{sj} + t_{dj}) \\ 
+\hline
+\multirow{2}{*}{If only one parent is known} 
+ & a_{ii} = 1 & t_{ij} = 0.5(t_{sj}) \\ 
+\hline
+\multirow{2}{*}{If neither parent is known} 
+ & a_{ii} = 1 & t_{ij} = 0 \\ 
+\hline
+\end{array}
+\]
+$$
 
-If only want parent $s$ or $d$ is known
- $t_{ij} = 0.5(t_{sj})$
-
-If neither parent is known
- $t_{ij} = 0$
-
-Diagonal is 
- $t_{ii} = 1$
- 
-For instance, for the pedigree above:
+For instance, applying the rules:
 
 $$
 \begin{aligned}
@@ -231,21 +238,9 @@ T_{6,5} &= 0.5(T_{5,5} + T_{2,5}) = 0.5(1 + 0) = 0.5
 $$
 We use the function getT from pedigreeTools to get the matrix T
 
-``` r
+```{r}
 (T = getT(ped2))
 ```
-Outcome:
-
-$$
-\begin{bmatrix}
-1 & 0 & 0 & 0 & 0 & 0 \\
-0 & 1 & 0 & 0 & 0 & 0 \\
-0.5 & 0.5 & 1 & 0 & 0 & 0 \\
-0.5 & 0 & 0 & 1 & 0 & 0 \\
-0.5 & 0.25 & 0.5 & 0.5 & 1 & 0 \\
-0.25 & 0.625 & 0.25 & 0.25 & 0.5 & 1 
-\end{bmatrix}
-$$
 
 ## Matrix D
 The diagonal matrix $D$ is the variance and covariance matrix for Mendelian sampling. 
@@ -258,7 +253,7 @@ m_i = a_i - 0.5(a_s + a_d)
 \end{aligned}
 $$
 
-Diagonal elements of $D$ are 1 for pedigree founders, $0.5 - 0.25(F_s + Fd)$ if both
+As $T$ there are rules for the computation of the diagonal elements of $D$ are 1 for pedigree founders, $0.5 - 0.25(F_s + Fd)$ if both
 parents of animal $i$ are known and $0.75 - 0.25(F_s)$ if only one parent $s$ is
 known.
 
@@ -291,20 +286,71 @@ d_{6,6} &= 0.5 - 0.25(F_5 + F_2)
 \end{equation}
 $$
 
-``` r
+```{r}
 (D = getD(ped2))
 ```
-$$
-\begin{bmatrix}
-1.00000 & 1.00000 & 0.50000 & 0.75000 & 0.50000 & 0.46875 
-\end{bmatrix}
-$$
 
-Finally, we can compute $A$
 
-```r
-(A_GCD =  T %*% diag(D) %*% Matrix::t(T))
+Finally, we can manually compute $A$ as follow:
+
+```{r}
+# Measure time for recursive method
+time_recursive <- system.time({
+  A
+})
+print(paste("1) $A$ matrix by recursive method - Time:", time_recursive["elapsed"], "seconds"))
+A
+
+# Measure time for Cholesky decomposition
+time_cholesky <- system.time({
+  A_chol
+})
+print(paste("2) $A$ matrix by Cholesky decomposition - Time:", time_cholesky["elapsed"], "seconds"))
+A_chol
+
+# Measure time for Generalized Cholesky decomposition
+time_GCD <- system.time({
+  A_GCD <- T %*% diag(D) %*% Matrix::t(T)
+})
+print(paste("3) $A$ matrix by generalized Cholesky decomposition - Time:", time_GCD["elapsed"], "seconds"))
+A_GCD
 ```
+    
+# 5) A inverse 
+## using LL method
+
+Computational, inverse A directly, is somehow inefficient when we need to compute a huge number of animals, that is why both Cholesky decomposition and generalized decomposition can help us to solve it.
+
+If $A = LL^T$, where $L$ is a lower triangular and $L^T$ is its transpose, then 
+then the inverse of $A$ can be computed as follows:
+
+Then, if
+
+$$
+A = LL^T 
+
+$$
+
+$$LL^T = (L^T)^{-1}L^{-1}$$
+
+And, 
+
+$$A^{-1} = (L^T)^{-1}L^{-1} =  (LL^T)^{-1}$$
+
+where, 
+- $L^{-1}$ is the inverse of the triangular matrix $L$
+- $L^{-T}$ is the inverse of the transpose of $L$, which is the transpose of L^{-1}
+
+## using factorization method
+$A^{-1}$ should be from 
+    
+    
+    
+    
+    
+    
+    
+    
     
 # Cholesky decomposition 
 
@@ -324,22 +370,6 @@ computing A−1 without setting up the relationship matrix.
 
 # Inverse of the relationship matrix 
 
-If $A = LL^T$, where $L$ is a lower triangular and $L^T$ is its transpose, then 
-then the inverse of $A$ can be computed as follows:
-
-$A^-1 = (LL^T)^-1$
-
-Using the property of matrix inversion:
-
-$(LL^T) = (L^T)^-1L^-1$
-
-Thus, 
-
-$A^-1 = (L^T)^-1L^-1$
-
-where, 
-- L^{-1} is the inverse of the triangular matrix $L$
-- L^{-T} is the inverse of the transpose of $L$, which is the transpose of L^{-1}
 
 Note that 
 $L = T %8% sqrt(D)$
