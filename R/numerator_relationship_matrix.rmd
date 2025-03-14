@@ -30,6 +30,8 @@ $A$ is symmetric and its diagonal elements represent twice the probability that 
 
 The off-diagonal elements, $a_{ij}$, equals the numerator of the coefficient of relationship between animals $i$ and $j$. When multiplied by the additive genetic variance $\sigma^{2}_a$, $A\sigma^{2}_a$ is the covariance among breeding values. $A$ is twice the coefficient of coancestry (kinship)
 
+A describes the expected genetic relationship between individuals before observing any phenotypic data, it serves as the prior covariance matrix of additive genetic values.
+
 
 For the aim of this exercise, I will use the library “pedigreeTools”:
 <https://github.com/Rpedigree/pedigreeTools>
@@ -84,7 +86,7 @@ However, we can use the function $getA$ from the R package $pedigreeTools$
  
 $$
 \begin{aligned}
-A &= LL'\\
+A &= LL^T\\
 \end{aligned}
 $$ 
 
@@ -105,7 +107,7 @@ Then,
 A
 ```
 
-Note that $LL' = L'L$ only if $L$ is orthogonal. Remember that a matix is defined orthogonal if  $LL' = L'L = I$
+Note that $LL^T = L^TL$ only if $L$ is orthogonal. Remember that a matix is defined orthogonal if  $LL^T = L^TL = I$
 
 # 4) Generalized cholesky decomposition
 
@@ -328,7 +330,6 @@ Then, if
 
 $$
 A = LL^T 
-
 $$
 
 $$LL^T = (L^T)^{-1}L^{-1}$$
@@ -342,15 +343,64 @@ where,
 - $L^{-T}$ is the inverse of the transpose of $L$, which is the transpose of L^{-1}
 
 ## using factorization method
-$A^{-1}$ should be from 
-    
-    
-    
-    
-    
-    
-    
-    
+$A^{-1}$ should be from generalized cholesky decomposition, thus. 
+
+$$A^{-1} = (T^{-1})^TD^{-1}T^{-1}$$
+
+The diagonal $D^{-1}$ inverse is easy to compute beacuse it is the reciprocal of diagonal elements of $D$
+
+```{r}
+(Dinv = diag(getDInv(ped2)))
+```
+
+
+On the other hand, $T^-1$ is a lower triangular matrix with $1$ in the diagonal the only non-zeros elements $-0.5$ correspond to know parents of the animal $i$. 
+
+It can be derived as 
+
+$$I - M$$
+
+
+where $I$ is and identity matrix of the order of animals on the pedigree 
+
+```{r}
+(n = 6)
+(I = diag(n))
+```
+
+and $M$ is a matrix of the contributions of gametes from parents to progeny (Kennedy, 1989) 
+
+```{r}
+(Tinv = solve(T))
+```
+Then, 
+
+```{r}
+(Ainv = t(Tinv) %*% Dinv %*% Tinv)
+```
+
+The function $getAinv$ compute $(L^T)^{-1}L^{-1$, note that in this case $L=sqrt(T)$
+
+
+```{r}
+(getAInv(ped2))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
 # Cholesky decomposition 
 
