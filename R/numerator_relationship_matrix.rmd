@@ -32,13 +32,12 @@ The off-diagonal elements, $a_{ij}$, equals the numerator of the coefficient of 
 
 A describes the expected genetic relationship between individuals before observing any phenotypic data, it serves as the prior covariance matrix of additive genetic values.
 
-
 For the aim of this exercise, I will use the library “pedigreeTools”:
 <https://github.com/Rpedigree/pedigreeTools>
 
 # 1) Create a pedigree
 
-First we will creat a pedigree
+First we will create a pedigree
 
 ```{r}
 ped = data.frame(iid = 1:6,
@@ -52,7 +51,7 @@ ped = data.frame(iid = 1:6,
 
 # 2) Tabular method
 
-The matrix A can be computed using path coefficients, but a recursive method that is suitable for computerization was described by Henderson (1976). Initially, animals in the pedigree are coded 1 to n and ordered such that parents precede their progeny. The following rules are then employed to compute A. 
+The matrix $A$ can be computed using path coefficients, but a recursive method that is suitable for computerization was described by Henderson (1976). Initially, animals in the pedigree are coded 1 to n and ordered such that parents precede their progeny. The following rules are then employed to compute $A$. 
 
 
 $$
@@ -73,43 +72,14 @@ $$
 \end{array}
 \]
 $$
-Manually, we can compute this as
-
-
-However, we can use the function $getA$ from the R package $pedigreeTools$
+We can manually compute A following the recursive method proposed by Henderson, or we can use
+the function $getA$ from the R package $pedigreeTools$ 
 
 ```{r}
 (A = getA(ped2))
 ```
-# 3) Cholesky decomposition 
- As the recursive method for computing $A$ can be demanding, Henderson (1975) proposed the Cholesky decomposition to build $A$. According to theory a matrix, as $A$ is symmetric and positive defined, it can be decomposed as:
- 
-$$
-\begin{aligned}
-A &= LL^T\\
-\end{aligned}
-$$ 
 
-Where
-
-$L$ is a lower triangular matrix, and
-$L'$ is its transpose
-
-Althoug, there are some rules to manually compute L, here we are going to use the function $getL$ from the R package $pedigreeTools$
-
-```{r}
-(L = t(getL(ped2)))
-```
-Then, 
-
-```{r}
-(A_chol = L %*% t(L))
-A
-```
-
-Note that $LL^T = L^TL$ only if $L$ is orthogonal. Remember that a matix is defined orthogonal if  $LL^T = L^TL = I$
-
-# 4) Generalized cholesky decomposition
+# 3) Generalized cholesky decomposition
 
 Applying the LDL factorization, A = TDT′, where T is a lower triangle matrix, and D is a diagonal matrix. In this method (Thompson, 1977), T and D matrices required to calculate A are derived indirectly (i.e., no direct factorization or decomposition).
 
@@ -317,6 +287,39 @@ time_GCD <- system.time({
 print(paste("3) $A$ matrix by generalized Cholesky decomposition - Time:", time_GCD["elapsed"], "seconds"))
 A_GCD
 ```
+    
+    
+# 4) Cholesky decomposition 
+As the recursive method for computing $A$ can be demanding, Henderson (1975) proposed the Cholesky decomposition to build $A$. According to theory a matrix, as $A$ is symmetric and positive defined, it can be decomposed as:
+ 
+$$
+\begin{aligned}
+A &= LL^T\\
+\end{aligned}
+$$ 
+
+Where
+
+$L$ is a lower triangular matrix, and
+$L'$ is its transpose
+
+
+
+
+For simplicity, there are some rules to manually compute L, here we are going to use the function $getL$ from the R package $pedigreeTools$
+
+```{r}
+(L = t(getL(ped2)))
+```
+Then, 
+
+```{r}
+(A_chol = L %*% t(L))
+A
+```
+
+Note that $LL^T = L^TL$ only if $L$ is orthogonal. Remember that a matix is defined orthogonal if  $LL^T = L^TL = I$
+    
     
 # 5) A inverse 
 ## using LL method
