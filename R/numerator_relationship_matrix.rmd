@@ -7,7 +7,7 @@ output: github_document
 
 # Load R packages
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(package = "pedigreeTools") 
 library(package = "Matrix")
 ```
@@ -28,9 +28,13 @@ $$
 The numerator relationship matrix $A$ describes the additive relationship among individuals.
 $A$ is symmetric and its diagonal elements represent twice the probability that two gametes taken at random from animal $i$ will carry carry identical by descent alleles, in other words, the inbreeding coefficient of animal $i$ (Wright, 1922)
 
-The off-diagonal elements, $a_{ij}$, equals the numerator of the coefficient of relationship between animals $i$ and $j$. When multiplied by the additive genetic variance $\sigma^{2}_a$, $A\sigma^{2}_a$ is the covariance among breeding values. $A$ is twice the coefficient of coancestry (kinship)
+$A$ describes the expected genetic relationship between individuals before observing any phenotypic data, it serves as the prior covariance matrix of additive genetic values.Thus, The additive relationship $a_{ij}$ is used as a measure of the covariance of breeding values between relative.
 
-A describes the expected genetic relationship between individuals before observing any phenotypic data, it serves as the prior covariance matrix of additive genetic values.
+The off-diagonal elements, $a_{ij}$, equals the numerator of the coefficient of relationship between animals $i$ and $j$. When multiplied by the additive genetic variance $\sigma^{2}_a$, $A\sigma^{2}_a$ is the covariance among breeding values. The numerator relationships are equal twice the coancestry, and they express the proportion of additive genetic variance that two individuals have in common. 
+
+The coefficient of coancestry of two individuals reflects the probability that two gametes taken at random, one from each, carry alleles that are identical by descent (=inbreedig coefficient of their progeny should they be mated together)
+
+The diagonals, the NRM contains the coefficient of inbreeding. That is the probability that two genes at any locus in an individual are identical by descent.
 
 For the aim of this exercise, I will use the library “pedigreeTools”:
 <https://github.com/Rpedigree/pedigreeTools>
@@ -40,19 +44,26 @@ For the aim of this exercise, I will use the library “pedigreeTools”:
 First we will create a pedigree
 
 ```{r}
-ped = data.frame(iid = 1:6,
-                 fid = c(0, 0, 1, 1, 4, 5), 
-                 mid = c(0, 0, 2, 0, 3, 2))
+ped = data.frame(iid = 1:8,
+                 fid = c(0, 0, 1, 1, 4, 0, 5, 7), 
+                 mid = c(0, 0, 2, 0, 3, 2, 0, 6))
 
-(ped2 = pedigree(sire  = ped$fid, 
+ped2 = pedigree(sire  = ped$fid, 
                  dam   = ped$mid,
-                 label = ped$iid))
+                 label = ped$iid)
+print(ped2)
 ```
+
+# Construction of the relationship matrix
+Systematic recurrent rules that are based on the flow of genes from generation to generation with individual animals being specified.
+
+- Path coefficient method: Suitable for small pedigrees with few generations and little inbreeding.
+- Recursively using the tabular method: 
+- xxx
 
 # 2) Tabular method
 
-The matrix $A$ can be computed using path coefficients, but a recursive method that is suitable for computerization was described by Henderson (1976). Initially, animals in the pedigree are coded 1 to n and ordered such that parents precede their progeny. The following rules are then employed to compute $A$. 
-
+Method described by Henderson (1976). Initially, the pedigree is ordered chronologically so that parents precede offspring. Base parents are considered unrelated and non-inbred. Then, working one row at a time, compute elements of $A$ using the following relationships:
 
 $$
 \[
@@ -60,13 +71,13 @@ $$
 \hline
 \textbf{Condition} & \textbf{Diagonals} & \textbf{Off-diagonals} \\ 
 \hline
-\multirow{2}{*}{If both parents are known} 
+\multirow{2}{*}{\parbox{4cm}{If both parents are\\ known}} 
  & a_{ii} = 2 + F_i + 0.5(a_{sd}) & a_{ij \vee ji} = 0.5(a_{js} + a_{jd}) \\ 
 \hline
-\multirow{2}{*}{If only one parent is known} 
+\multirow{2}{*}{\parbox{4cm}{If only one parent\\ is known}} 
  & a_{ii} = 1 & a_{ij \vee ji} = 0.5(a_{js}) \\ 
 \hline
-\multirow{2}{*}{If neither parent is known} 
+\multirow{2}{*}{\parbox{4cm}{If neither parent\\ is known}} 
  & a_{ii} = 1 & a_{ij \vee ji} = 0 \\ 
 \hline
 \end{array}
@@ -435,6 +446,21 @@ getAInv(ped2)
 The prediction of breeding values requires the inverse of the relationship matrix, 
 $A^-1$. This could be obtained by setting up $A$ by the recursive method and inverting
 it. 
+
+
+```{r}
+# Crear figura de corazón
+t <- seq(0, 2*pi, length.out = 1000)
+x <- 16 * sin(t)^3
+y <- 13 * cos(t) - 5*cos(2*t) - 2*cos(3*t) - cos(4*t)
+
+# Dibujar el corazón
+plot(x, y, type = "l", col = "red", lwd = 3, axes = FALSE, xlab = "", ylab = "", main = "")
+polygon(x, y, col = "pink", border = "red")
+
+# Agregar el texto en el centro del corazón
+text(0, 0, "Te amo, príncipe", col = "darkred", cex = 2.5, font = 2)
+```
 
 
 # Definitions
