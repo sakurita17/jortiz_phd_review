@@ -10,7 +10,10 @@ output: github_document
 ```{r, message=FALSE, warning=FALSE}
 library(package = "pedigreeTools") 
 library(package = "Matrix")
+library(package = "markdown")
 ```
+
+
 
 # Introduction
 
@@ -25,16 +28,13 @@ R_{i,j} &= \text{Cor}(g_i,g_j) \\
 \end{aligned}
 $$
 
-The numerator relationship matrix $A$ describes the additive relationship among individuals.
-$A$ is symmetric and its diagonal elements represent twice the probability that two gametes taken at random from animal $i$ will carry carry identical by descent alleles, in other words, the inbreeding coefficient of animal $i$ (Wright, 1922)
-
-$A$ describes the expected genetic relationship between individuals before observing any phenotypic data, it serves as the prior covariance matrix of additive genetic values.Thus, The additive relationship $a_{ij}$ is used as a measure of the covariance of breeding values between relative.
+The numerator relationship matrix $A$ describes the expected additive relationship between individuals, before observing any phenotypic data, it serves as the prior covariance matrix of additive genetic values.Thus, The additive relationship $a_{ij}$ is used as a measure of the covariance of breeding values between relative (gg).
 
 The off-diagonal elements, $a_{ij}$, equals the numerator of the coefficient of relationship between animals $i$ and $j$. When multiplied by the additive genetic variance $\sigma^{2}_a$, $A\sigma^{2}_a$ is the covariance among breeding values. The numerator relationships are equal twice the coancestry, and they express the proportion of additive genetic variance that two individuals have in common. 
 
 The coefficient of coancestry of two individuals reflects the probability that two gametes taken at random, one from each, carry alleles that are identical by descent (=inbreedig coefficient of their progeny should they be mated together)
 
-The diagonals, the NRM contains the coefficient of inbreeding. That is the probability that two genes at any locus in an individual are identical by descent.
+The diagonals $(a_{ii})$ contain the coefficient of inbreeding. That is the probability that two genes at any locus in an individual are identical by descent.
 
 For the aim of this exercise, I will use the library “pedigreeTools”:
 <https://github.com/Rpedigree/pedigreeTools>
@@ -44,13 +44,13 @@ For the aim of this exercise, I will use the library “pedigreeTools”:
 First we will create a pedigree
 
 ```{r}
-ped = data.frame(iid = 1:8,
-                 fid = c(0, 0, 1, 1, 4, 0, 5, 7), 
-                 mid = c(0, 0, 2, 0, 3, 2, 0, 6))
+ped = data.frame(ID = 1:6,
+                 fid = c(0, 0, 1, 1, 4, 5), 
+                 mid = c(0, 0, 2, 0, 3, 2))
 
 ped2 = pedigree(sire  = ped$fid, 
                  dam   = ped$mid,
-                 label = ped$iid)
+                 label = ped$ID)
 print(ped2)
 ```
 
@@ -72,7 +72,7 @@ $$
 \textbf{Condition} & \textbf{Diagonals} & \textbf{Off-diagonals} \\ 
 \hline
 \multirow{2}{*}{\parbox{4cm}{If both parents are\\ known}} 
- & a_{ii} = 2 + F_i + 0.5(a_{sd}) & a_{ij \vee ji} = 0.5(a_{js} + a_{jd}) \\ 
+ & a_{ii} = 1 + F_i = 1 + 0.5(a_{sd}) & a_{ij \vee ji} = 0.5(a_{js} + a_{jd}) \\ 
 \hline
 \multirow{2}{*}{\parbox{4cm}{If only one parent\\ is known}} 
  & a_{ii} = 1 & a_{ij \vee ji} = 0.5(a_{js}) \\ 
@@ -83,25 +83,44 @@ $$
 \end{array}
 \]
 $$
-We can manually compute A following the recursive method proposed by Henderson, or we can use
-the function $getA$ from the R package $pedigreeTools$ 
+We can manually compute $A$ following the recursive method proposed by Henderson (1976).
+To show how this work  I used the function created by Nilforooshan, M. A. (2021) in 
+https://www.frontiersin.org/journals/genetics/articles/10.3389/fgene.2021.655638/full
 
 ```{r}
-(A = getA(ped2))
+tabularA <- function(ped) {
+    ped$p1 = apply(ped[,2:3], 1, FUN=min)
+    ped$p2 = apply(ped[,2:3], 1, FUN=max)
+    ped = ped[,c("ID","p1","p2")]
+    A = diag(nrow(ped))
+    for(i in which(ped$p2 >0))
+    {
+        p1 = ped[i,]$p1
+        p2 = ped[i,]$p2
+        if(p1==0) {
+            A[1:(i-1),i] = A[1:(i-1),p2]/2
+        } else {
+            A[1:(i-1),i] = (A[1:(i-1),p1] + A[1:(i-1),p2])/2
+            A[i,i] = 1 + A[p1,p2]/2
+        }
+        A[i,1:(i-1)] = A[1:(i-1),i]
+    }
+    return(A)
+}
+```
+
+
+```{r}
+tabularA(ped)
 ```
 
 # 3) Generalized cholesky decomposition
 
-Applying the LDL factorization, A = TDT′, where T is a lower triangle matrix, and D is a diagonal matrix. In this method (Thompson, 1977), T and D matrices required to calculate A are derived indirectly (i.e., no direct factorization or decomposition).
-
-
-The relationship matrix can be expressed as $A = TDT^T$ (Thompson, 1977), where $T$ 
+The numerator relationship matrix $A$ can be expressed as $TDT^T$ (Thompson, 1977), where $T$ 
 is a lower triangular matrix and $D$ is a diagonal matrix.
 
 ## Matrix T
-The matrix $T$ is a lower triangle matrix  traces the flow of genes from one generation to the other. Thus, 
-for our small pedigree, we know that the expected and variance of the breeding 
-values are as follow:
+The matrix $T$ traces the flow of genes from one generation to the other. For example, for our small pedigree, we know that the expected and variance of the breeding values are as follow:
 
 $$
 \[
@@ -125,7 +144,7 @@ a_6 \sim N(0, \sigma^2_{a}) & \(a_6 \mid a_5,a_2 \sim N\left(\frac{1}{2} (a_5 + 
 \]
 $$
 
-Now, the system of equations is:
+Now, we define our system of equations:
 
 $$
 \begin{aligned}
@@ -177,7 +196,7 @@ r_6
 \end{bmatrix}
 $$
 
-We can get $T$ following the next rules, 
+However, we can follow the next rules to get $T$ following the next rules. 
 
 $$
 \[
@@ -198,7 +217,7 @@ $$
 \]
 $$
 
-For instance, applying the rules:
+After, applying the rules:
 
 $$
 \begin{aligned}
@@ -219,28 +238,28 @@ T_{6,4} &= 0.5(T_{5,4} + T_{2,4}) = 0.5(0.5 + 0) = 0.25 \\
 T_{6,5} &= 0.5(T_{5,5} + T_{2,5}) = 0.5(1 + 0) = 0.5 
 \end{aligned}
 $$
-We use the function getT from pedigreeTools to get the matrix T
+
+We use the function $getT$ from pedigreeTools to get the matrix $T$. This function compute $T$ from its inverse.
 
 ```{r}
-(T = getT(ped2))
+T = getT(ped2)
+T
 ```
 
 ## Matrix D
-The diagonal matrix $D$ is the variance and covariance matrix for Mendelian sampling. 
-The Mendelian sampling $(m)$ for an animal $i$ with breeding value $a_i$ and $a_s$
-and $a_d$ as breeding values for its sire and dam, respectively, is:
+The diagonal matrix $D$ is the variance and covariance matrix for Mendelian sampling. If there is no inbreeding, the values
+for each diagonal are 1 if no parents are known, 3/4 if one of the parents is known and 1/2 if both parents are known.
 
-$$
-\begin{aligned}
-m_i = a_i - 0.5(a_s + a_d)
-\end{aligned}
-$$
+For example, from our small pedigree.. see the example ipad...
 
-As $T$ there are rules for the computation of the diagonal elements of $D$ are 1 for pedigree founders, $0.5 - 0.25(F_s + Fd)$ if both
-parents of animal $i$ are known and $0.75 - 0.25(F_s)$ if only one parent $s$ is
-known.
+```{r}
 
-Thus, the diagonal matrix for our example is:
+```
+
+
+When inbreeding is taking into account, the diagonal elements of $D$ are 1 for pedigree founders, $0.5 - 0.25(F_s + Fd)$ if both parents of animal $i$ are known and $0.75 - 0.25(F_s)$ if only one parent $s$ is known.
+
+For example, 
 
 $$
 \begin{equation}
@@ -251,7 +270,7 @@ d_{2,2} &= 1 \\
 
 d_{3,3} &= 0.5 - 0.25(F_1 + F_2) 
          = 0.5 - 0.25(0)
-         = 0 \\
+         = 0.5 \\
 
 d_{4,4} &= 0.75 - 0.25(F_1) 
          = 0.75 - 0.25(0)
@@ -269,37 +288,21 @@ d_{6,6} &= 0.5 - 0.25(F_5 + F_2)
 \end{equation}
 $$
 
+or for simplicity use the function $getD$ from pedigreeTools
+
 ```{r}
-(D = getD(ped2))
+D = getD(ped2)
+D
 ```
 
 
 Finally, we can manually compute $A$ as follow:
 
 ```{r}
-# Measure time for recursive method
-time_recursive <- system.time({
-  A
-})
-print(paste("1) $A$ matrix by recursive method - Time:", time_recursive["elapsed"], "seconds"))
-A
-
-# Measure time for Cholesky decomposition
-time_cholesky <- system.time({
-  A_chol
-})
-print(paste("2) $A$ matrix by Cholesky decomposition - Time:", time_cholesky["elapsed"], "seconds"))
-A_chol
-
-# Measure time for Generalized Cholesky decomposition
-time_GCD <- system.time({
-  A_GCD <- T %*% diag(D) %*% Matrix::t(T)
-})
-print(paste("3) $A$ matrix by generalized Cholesky decomposition - Time:", time_GCD["elapsed"], "seconds"))
-A_GCD
+gCholA = T %*% diag(D) %*% t(T)
+gCholA
 ```
-    
-    
+
 # 4) Cholesky decomposition 
 As the recursive method for computing $A$ can be demanding, Henderson (1975) proposed the Cholesky decomposition to build $A$. According to theory a matrix, as $A$ is symmetric and positive defined, it can be decomposed as:
  
@@ -314,41 +317,45 @@ Where
 $L$ is a lower triangular matrix, and
 $L'$ is its transpose
 
-
-
-
-For simplicity, there are some rules to manually compute L, here we are going to use the function $getL$ from the R package $pedigreeTools$
+$L$ can be manually computed by following there some rules. However, $L = T %*%sqrt(D)$, and this is the method implemented by the function $getL$ from the R package $pedigreeTools$
 
 ```{r}
-(L = t(getL(ped2)))
+L = getL(ped2)
+L
 ```
-Then, 
 
 ```{r}
-(A_chol = L %*% t(L))
-A
+cholA = crossprod(L)
+cholA
 ```
 
 Note that $LL^T = L^TL$ only if $L$ is orthogonal. Remember that a matix is defined orthogonal if  $LL^T = L^TL = I$
+
+
+```{r}
+L %*% t(L)
+```
+```{r}
+t(L) %*% L
+```
     
-    
-# 5) A inverse 
-## using LL method
+# 5) Inverse of the numerator relationship matrix
 
-Computational, inverse A directly, is somehow inefficient when we need to compute a huge number of animals, that is why both Cholesky decomposition and generalized decomposition can help us to solve it.
+## Using LL' method
 
-If $A = LL^T$, where $L$ is a lower triangular and $L^T$ is its transpose, then 
-then the inverse of $A$ can be computed as follows:
+Computational, inverse A directly, is inefficient when we need to compute a huge number of animals, that is why both Cholesky decomposition and generalized Cholesky decomposition help us to solve it.
 
-Then, if
+Thus, if
 
 $$
 A = LL^T 
 $$
 
+and
+
 $$LL^T = (L^T)^{-1}L^{-1}$$
 
-And, 
+Then, 
 
 $$A^{-1} = (L^T)^{-1}L^{-1} =  (LL^T)^{-1}$$
 
@@ -356,114 +363,65 @@ where,
 - $L^{-1}$ is the inverse of the triangular matrix $L$
 - $L^{-T}$ is the inverse of the transpose of $L$, which is the transpose of L^{-1}
 
-## using factorization method
-$A^{-1}$ should be from generalized cholesky decomposition, thus. 
+
+```{r}
+solve(t(L) %*% L)
+```
+
+## Using factorization method
+
+Finally, $A^{-1}$ should be from generalized Cholesky decomposition. 
 
 $$A^{-1} = (T^{-1})^TD^{-1}T^{-1}$$
 
-The diagonal $D^{-1}$ inverse is easy to compute beacuse it is the reciprocal of diagonal elements of $D$
+The diagonal $D^{-1}$ inverse is easy to compute because is the reciprocal of diagonal elements of $D$
 
 ```{r}
-(Dinv = diag(getDInv(ped2)))
+invD = solve(diag(D))
+invD
 ```
 
-
-On the other hand, $T^-1$ is a lower triangular matrix with $1$ in the diagonal the only non-zeros elements $-0.5$ correspond to know parents of the animal $i$. 
-
-It can be derived as 
-
-$$I - M$$
-
-
-where $I$ is and identity matrix of the order of animals on the pedigree 
-
 ```{r}
-(n = 6)
-(I = diag(n))
+getDInv(ped2)
 ```
 
-and $M$ is a matrix of the contributions of gametes from parents to progeny (Kennedy, 1989) 
+Now, $T^-1$ is a lower triangular matrix with $1$ in the diagonal the only non-zeros elements $-0.5$ correspond to know parents of the animal $i$. It can be derived as $I - M$, where $I$ is an identuty matrix of the order of animal on the pedigree and $M$ is a matrix of the contributions of gametes from parents to progeny (Kennedy, 19)
+
+Thus, the matrix $I$
 
 ```{r}
-(Tinv = solve(T))
+n = length(ped2@label)
+I = diag(n)
+I
 ```
-Then, 
+the matrix $M$
 
 ```{r}
-(Ainv = t(Tinv) %*% Dinv %*% Tinv)
+m = matrix(0, n, n)
+m
+```
+
+Now, for simplicity we can use the function 
+
+```{r}
+invT = getTInv(ped2)
+```
+
+Now,
+
+```{r}
+gCholAinv = t(invT) %*% invD %*% invT
+gCholAinv
 ```
 
 The function $getAinv$ compute $(L^T)^{-1}L^{-1$, note that in this case $L=sqrt(T)$
-
 
 ```{r}
 (getAInv(ped2))
 ```
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-# Cholesky decomposition 
-
-Using the concepts of Cholesky decomposition, $A$ can be written as $A$ = LL', 
-where $L$ is a lower triangle matrix with non-zero diagonal (Henderson, 1975). 
-Quaas (1976) presented a strategy for obtaining the diagonal elements of A while
-computing A−1 without setting up the relationship matrix.
-
-```r
-(L = t(relfactor(ped2)))
-```
-
-
-```r
-(A_chol = L %*% t(L)) 
-```
-
-# Inverse of the relationship matrix 
-
-
-Note that 
-$L = T %8% sqrt(D)$
-
-
-```r
-getAInv(ped2)
-```
-
-The prediction of breeding values requires the inverse of the relationship matrix, 
-$A^-1$. This could be obtained by setting up $A$ by the recursive method and inverting
-it. 
-
-
-```{r}
-# Crear figura de corazón
-t <- seq(0, 2*pi, length.out = 1000)
-x <- 16 * sin(t)^3
-y <- 13 * cos(t) - 5*cos(2*t) - 2*cos(3*t) - cos(4*t)
-
-# Dibujar el corazón
-plot(x, y, type = "l", col = "red", lwd = 3, axes = FALSE, xlab = "", ylab = "", main = "")
-polygon(x, y, col = "pink", border = "red")
-
-# Agregar el texto en el centro del corazón
-text(0, 0, "Te amo, príncipe", col = "darkred", cex = 2.5, font = 2)
-```
-
-
-# Definitions
+# Key word
 
 Mendelian sampling
 
@@ -474,4 +432,8 @@ Conditionally probability
 Cholesky decomposition
 
 Matrix properties
+
+```{r}
+rmarkdown::render("your_file.Rmd", output_format = "github_document")
+```
 

@@ -1,143 +1,167 @@
-Numerator relationship matrix
+Numerator Relationship Matrix
 ================
-2025-02-24
 
-# Introduction
+================ 2025-02-24
 
-Additive relationships are a measure of the proportion of genes, which are identical
-by descent, which are expected to be shared by two animals. The idea of tracing 
-paths to establish the relationship among animals was introduced by Wright (1921), 
-however was Malecot (1948) how defined relationship based on probabilities of 
-individual genes at a locus being identical by descent.
+# Load R packages
 
-Based on the path analysis of phenotypic values for pedigree members, Wrigth (1922)
-defined relationship coefficient $R$ between individuals $i$ and $j$ as the
-correlation between their genetic values (Gorjanc notes):
-
-$$
-\begin{aligned}
-R_{i,j} = Cor(g_i,g_j) \\
-Cov(g_i,g_j)/sqr(Var(g_i)Var(g_j))
-\end{aligned}
-$$
-
-The Numerator relationship matrix $(A)$ describes the additive relationship among 
-individuals. $(A)$ is a symmetric and its diagonal elements represent twice 
-the probability that two gametes taken at random from animal $i$ will carry 
-identical alleles by descent, in other words, the inbreeding coefficient of 
-animal $i$ (Wright, 1922).
-
-The off-diagonal elements, $a_{ij}$, equals the numerator of the coefficient 
-of relationship between animals $i$ and $j$. When multiplied by the additive
-genetic variance $\sigma^2_{a}$, $A\sigma^2_{a}$ is the covariance among breeding
-values. $A$ is twice the coefficient of coancestry (kinship).
-
-
-# Packages 
-
-```r
+``` r
 library(package = "pedigreeTools") 
 library(package = "Matrix")
 ```
 
-# Objective
+# Introduction
 
-To understand the numerator relationship matrix and method for its computation
+The additive relationships measure the proportion of genes that are
+identical by descendant and are expected to be shared by two animals
+(Wright, 1921). However, Malecot (1948) was a question of how defined
+relationship-based probabilities of individual genes at a locus being
+identical by descent.
 
-# Library
+Based on the path analysis of the phenotypic values of the members of
+the pedigree, Wright (1922) defined the relationship coefficient $R$
+between individual $i$ and $j$ as the correlation between their genetic
+value (Gregor notes).
+
+$$
+\begin{aligned}
+R_{i,j} &= \text{Cor}(g_i,g_j) \\
+        &= \frac{\text{Cov}(g_i,g_j)}{\sqrt{\text{Var}(g_i) \cdot \text{Var}(g_j)}}
+\end{aligned}
+$$
+
+The numerator relationship matrix $A$ describes the expected additive
+relationship between individuals, before observing any phenotypic data,
+it serves as the prior covariance matrix of additive genetic
+values.Thus, The additive relationship $a_{ij}$ is used as a measure of
+the covariance of breeding values between relative (gg).
+
+The off-diagonal elements, $a_{ij}$, equals the numerator of the
+coefficient of relationship between animals $i$ and $j$. When multiplied
+by the additive genetic variance $\sigma^{2}_a$, $A\sigma^{2}_a$ is the
+covariance among breeding values. The numerator relationships are equal
+twice the coancestry, and they express the proportion of additive
+genetic variance that two individuals have in common.
+
+The coefficient of coancestry of two individuals reflects the
+probability that two gametes taken at random, one from each, carry
+alleles that are identical by descent (=inbreedig coefficient of their
+progeny should they be mated together)
+
+The diagonals $(a_{ii})$ contain the coefficient of inbreeding. That is
+the probability that two genes at any locus in an individual are
+identical by descent.
 
 For the aim of this exercise, I will use the library “pedigreeTools”:
 <https://github.com/Rpedigree/pedigreeTools>
 
-
 # 1) Create a pedigree
 
+First we will create a pedigree
+
 ``` r
-ped = data.frame(iid = 1:6,
+ped = data.frame(ID = 1:6,
                  fid = c(0, 0, 1, 1, 4, 5), 
                  mid = c(0, 0, 2, 0, 3, 2))
 
-(ped2 = pedigree(sire  = ped$fid, 
+ped2 = pedigree(sire  = ped$fid, 
                  dam   = ped$mid,
-                 label = ped$iid))
+                 label = ped$ID)
+print(ped2)
 ```
 
-Output:
+    ##   sire  dam
+    ## 1 <NA> <NA>
+    ## 2 <NA> <NA>
+    ## 3    1    2
+    ## 4    1 <NA>
+    ## 5    4    3
+    ## 6    5    2
 
-$$
-\begin{array}{|c|c|c|}
-\hline
-idd & sire & dam \\
-\hline
-1 & NA & NA \\
-\hline
-2 & NA & NA \\
-\hline
-3 & 1 & 2 \\
-\hline
-4 & 1 & NA \\
-\hline
-5 & 4 & 3 \\
-\hline
-6 & 5 & 2 \\
-\hline
-\end{array}
-$$
+# Construction of the relationship matrix
 
-                
+Systematic recurrent rules that are based on the flow of genes from
+generation to generation with individual animals being specified.
+
+- Path coefficient method: Suitable for small pedigrees with few
+  generations and little inbreeding.
+- Recursively using the tabular method:
+- xxx
+
 # 2) Tabular method
 
-Applying the tabular method require to order the pedigree ensuring parents appear
-before their progeny.Thus, the matrix {$A$} is formed following the recursive 
-method: 
+Method described by Henderson (1976). Initially, the pedigree is ordered
+chronologically so that parents precede offspring. Base parents are
+considered unrelated and non-inbred. Then, working one row at a time,
+compute elements of $A$ using the following relationships:
 
-If both parents of {$i^th$} individual are known, say $s$ and $d$
+$$
+\[
+\begin{array}{|l|c|c|}
+\hline
+\textbf{Condition} & \textbf{Diagonals} & \textbf{Off-diagonals} \\ 
+\hline
+\multirow{2}{*}{\parbox{4cm}{If both parents are\\ known}} 
+ & a_{ii} = 1 + F_i = 1 + 0.5(a_{sd}) & a_{ij \vee ji} = 0.5(a_{js} + a_{jd}) \\ 
+\hline
+\multirow{2}{*}{\parbox{4cm}{If only one parent\\ is known}} 
+ & a_{ii} = 1 & a_{ij \vee ji} = 0.5(a_{js}) \\ 
+\hline
+\multirow{2}{*}{\parbox{4cm}{If neither parent\\ is known}} 
+ & a_{ii} = 1 & a_{ij \vee ji} = 0 \\ 
+\hline
+\end{array}
+\]
+$$ We can manually compute $A$ following the recursive method proposed
+by Henderson (1976). To show how this work I used the function created
+by Nilforooshan, M. A. (2021) in
+<https://www.frontiersin.org/journals/genetics/articles/10.3389/fgene.2021.655638/full>
 
-- The diagonal element:
-  $a_{ii} = 1 + F_i = 1 + 0.5(a_{sd})$
-
-- The off-diagonal element:
-  $a_{ij} = a_{ji} = 0.5(a_{js} + a_{jd})$
-
-If only one parent $s$ or $d$ is known:
-
-- The diagonal element:
-
-  $a_{ii} = 1$
-
-- The off-diagonal element:
-
-  $a_{ij} = a_{ji} = 0.5(a_{js/jd})$
-
-If neither parent is known:
-
-- The diagonal element:
-
-  $a_{ii} = 1$
-
-- The off-diagonal element:
-
-  $a_{ij} = a_{ji} = 0$
-
-Then, from the example pedigree from above, A is:
-
-```r
-(A = getA(ped2))
+``` r
+tabularA <- function(ped) {
+    ped$p1 = apply(ped[,2:3], 1, FUN=min)
+    ped$p2 = apply(ped[,2:3], 1, FUN=max)
+    ped = ped[,c("ID","p1","p2")]
+    A = diag(nrow(ped))
+    for(i in which(ped$p2 >0))
+    {
+        p1 = ped[i,]$p1
+        p2 = ped[i,]$p2
+        if(p1==0) {
+            A[1:(i-1),i] = A[1:(i-1),p2]/2
+        } else {
+            A[1:(i-1),i] = (A[1:(i-1),p1] + A[1:(i-1),p2])/2
+            A[i,i] = 1 + A[p1,p2]/2
+        }
+        A[i,1:(i-1)] = A[1:(i-1),i]
+    }
+    return(A)
+}
 ```
 
-The prediction of breeding values requires the inverse of the relationship matrix, 
-$A^-1$. This could be obtained by setting up $A$ by the recursive method and inverting
-it. 
+``` r
+tabularA(ped)
+```
 
-# 3) Generalised Cholesky decomposition 
+    ##      [,1]  [,2]   [,3]   [,4]   [,5]   [,6]
+    ## [1,] 1.00 0.000 0.5000 0.5000 0.5000 0.2500
+    ## [2,] 0.00 1.000 0.5000 0.0000 0.2500 0.6250
+    ## [3,] 0.50 0.500 1.0000 0.2500 0.6250 0.5625
+    ## [4,] 0.50 0.000 0.2500 1.0000 0.6250 0.3125
+    ## [5,] 0.50 0.250 0.6250 0.6250 1.1250 0.6875
+    ## [6,] 0.25 0.625 0.5625 0.3125 0.6875 1.1250
 
-The relationship matrix can be expressed as $A = TDT^T$ (Thompson, 1977), where $T$ 
-is a lower triangular matrix and $D$ is a diagonal matrix.
+# 3) Generalized cholesky decomposition
+
+The numerator relationship matrix $A$ can be expressed as $TDT^T$
+(Thompson, 1977), where $T$ is a lower triangular matrix and $D$ is a
+diagonal matrix.
 
 ## Matrix T
-The matrix $T$ is a lower triangle matrix  traces the flow of genes from one generation to the other. Thus, 
-for our small pedigree, we know that the expected and variance of the breeding 
-values are as follow:
+
+The matrix $T$ traces the flow of genes from one generation to the
+other. For example, for our small pedigree, we know that the expected
+and variance of the breeding values are as follow:
 
 $$
 \[
@@ -161,7 +185,7 @@ a_6 \sim N(0, \sigma^2_{a}) & \(a_6 \mid a_5,a_2 \sim N\left(\frac{1}{2} (a_5 + 
 \]
 $$
 
-Now, the system of equations is:
+Now, we define our system of equations:
 
 $$
 \begin{aligned}
@@ -213,21 +237,29 @@ r_6
 \end{bmatrix}
 $$
 
-We can get $T$ following the next rules, 
+However, we can follow the next rules to get $T$ following the next
+rules.
 
-If both parents $s$ and $d$ are known 
- $t_{ij} = 0.5(t_{sj} + t_{dj})$
+$$
+\[
+\begin{array}{|l|c|c|}
+\hline
+\textbf{Condition} & \textbf{Diagonals} & \textbf{Off-diagonals} \\ 
+\hline
+\multirow{2}{*}{If both parents are known} 
+ & a_{ii} = 1 & t_{ij} = 0.5(t_{sj} + t_{dj}) \\ 
+\hline
+\multirow{2}{*}{If only one parent is known} 
+ & a_{ii} = 1 & t_{ij} = 0.5(t_{sj}) \\ 
+\hline
+\multirow{2}{*}{If neither parent is known} 
+ & a_{ii} = 1 & t_{ij} = 0 \\ 
+\hline
+\end{array}
+\]
+$$
 
-If only want parent $s$ or $d$ is known
- $t_{ij} = 0.5(t_{sj})$
-
-If neither parent is known
- $t_{ij} = 0$
-
-Diagonal is 
- $t_{ii} = 1$
- 
-For instance, for the pedigree above:
+After, applying the rules:
 
 $$
 \begin{aligned}
@@ -248,127 +280,297 @@ T_{6,4} &= 0.5(T_{5,4} + T_{2,4}) = 0.5(0.5 + 0) = 0.25 \\
 T_{6,5} &= 0.5(T_{5,5} + T_{2,5}) = 0.5(1 + 0) = 0.5 
 \end{aligned}
 $$
-We use the function getT from pedigreeTools to get the matrix T
+
+We use the function $getT$ from pedigreeTools to get the matrix $T$.
+This function compute $T$ from its inverse.
 
 ``` r
-(T = getT(ped2))
+T = getT(ped2)
 ```
-Outcome:
 
-$$
-\begin{bmatrix}
-1 & 0 & 0 & 0 & 0 & 0 \\
-0 & 1 & 0 & 0 & 0 & 0 \\
-0.5 & 0.5 & 1 & 0 & 0 & 0 \\
-0.5 & 0 & 0 & 1 & 0 & 0 \\
-0.5 & 0.25 & 0.5 & 0.5 & 1 & 0 \\
-0.25 & 0.625 & 0.25 & 0.25 & 0.5 & 1 
-\end{bmatrix}
-$$
+    ## 'as(<dtTMatrix>, "dtCMatrix")' is deprecated.
+    ## Use 'as(., "CsparseMatrix")' instead.
+    ## See help("Deprecated") and help("Matrix-deprecated").
+
+``` r
+T
+```
+
+    ## 6 x 6 sparse Matrix of class "dtCMatrix"
+    ##      1     2    3    4   5 6
+    ## 1 1.00 .     .    .    .   .
+    ## 2 .    1.000 .    .    .   .
+    ## 3 0.50 0.500 1.00 .    .   .
+    ## 4 0.50 .     .    1.00 .   .
+    ## 5 0.50 0.250 0.50 0.50 1.0 .
+    ## 6 0.25 0.625 0.25 0.25 0.5 1
 
 ## Matrix D
-The diagonal matrix $D$ is the variance and covariance matrix for Mendelian sampling. 
-The Mendelian sampling $(m)$ for an animal $i$ with breeding value $a_i$ and $a_s$
-and $a_d$ as breeding values for its sire and dam, respectively, is:
 
-$$
-\begin{aligned}
-m_i = a_i - 0.5(a_s + a_d)
-\end{aligned}
-$$
+The diagonal matrix $D$ is the variance and covariance matrix for
+Mendelian sampling. If there is no inbreeding, the values for each
+diagonal are 1 if no parents are known, 3/4 if one of the parents is
+known and 1/2 if both parents are known.
 
-Diagonal elements of $D$ are 1 for pedigree founders, $0.5 - 0.25(F_s + Fd)$ if both
-parents of animal $i$ are known and $0.75 - 0.25(F_s)$ if only one parent $s$ is
+For example, from our small pedigree.. see the example ipad…
+
+When inbreeding is taking into account, the diagonal elements of $D$ are
+1 for pedigree founders, $0.5 - 0.25(F_s + Fd)$ if both parents of
+animal $i$ are known and $0.75 - 0.25(F_s)$ if only one parent $s$ is
 known.
 
-Thus, the diagonal matrix for our example is:
+For example,
 
-$$
-\begin{equation}
-\begin{aligned}
-d_{1,1} &= 1 \\
+\$\$ \$\$
 
-d_{2,2} &= 1 \\
-
-d_{3,3} &= 0.5 - 0.25(F_1 + F_2) 
-         = 0.5 - 0.25(0)
-         = 0 \\
-
-d_{4,4} &= 0.75 - 0.25(F_1) 
-         = 0.75 - 0.25(0)
-         = 0.75 \\
-
-d_{5,5} &= 0.5 - 0.25(F_4 + F_3) 
-         = 0.5 - 0.25(0 + 0)
-         = 0.5 \\
-
-d_{6,6} &= 0.5 - 0.25(F_5 + F_2) 
-         = 0.5 - 0.25(0.125 + 0)
-         = 0.46875
-
-\end{aligned}
-\end{equation}
-$$
+or for simplicity use the function $getD$ from pedigreeTools
 
 ``` r
-(D = getD(ped2))
+D = getD(ped2)
+D
 ```
+
+    ##       1       2       3       4       5       6 
+    ## 1.00000 1.00000 0.50000 0.75000 0.50000 0.46875
+
+Finally, we can manually compute $A$ as follow:
+
+``` r
+gCholA = T %*% diag(D) %*% t(T)
+gCholA
+```
+
+    ## 6 x 6 Matrix of class "dgeMatrix"
+    ##      1     2      3      4      5      6
+    ## 1 1.00 0.000 0.5000 0.5000 0.5000 0.2500
+    ## 2 0.00 1.000 0.5000 0.0000 0.2500 0.6250
+    ## 3 0.50 0.500 1.0000 0.2500 0.6250 0.5625
+    ## 4 0.50 0.000 0.2500 1.0000 0.6250 0.3125
+    ## 5 0.50 0.250 0.6250 0.6250 1.1250 0.6875
+    ## 6 0.25 0.625 0.5625 0.3125 0.6875 1.1250
+
+# 4) Cholesky decomposition
+
+As the recursive method for computing $A$ can be demanding, Henderson
+(1975) proposed the Cholesky decomposition to build $A$. According to
+theory a matrix, as $A$ is symmetric and positive defined, it can be
+decomposed as:
+
 $$
-\begin{bmatrix}
-1.00000 & 1.00000 & 0.50000 & 0.75000 & 0.50000 & 0.46875 
-\end{bmatrix}
+\begin{aligned}
+A &= LL^T\\
+\end{aligned}
 $$
 
-Finally, we can compute $A$
+Where
 
-```r
-(A_GCD =  T %*% diag(D) %*% Matrix::t(T))
-```
-    
-# Cholesky decomposition 
+$L$ is a lower triangular matrix, and $L'$ is its transpose
 
-Using the concepts of Cholesky decomposition, $A$ can be written as $A$ = LL', 
-where $L$ is a lower triangle matrix with non-zero diagonal (Henderson, 1975). 
-Quaas (1976) presented a strategy for obtaining the diagonal elements of A while
-computing A−1 without setting up the relationship matrix.
+$L$ can be manually computed by following there some rules. However,
+$L = T %*%sqrt(D)$, and this is the method implemented by the function
+$getL$ from the R package $pedigreeTools$
 
-```r
-(L = t(relfactor(ped2)))
+``` r
+L = getL(ped2)
+L
 ```
 
+    ## 6 x 6 sparse Matrix of class "dtCMatrix"
+    ##   1 2         3         4         5         6
+    ## 1 1 . 0.5000000 0.5000000 0.5000000 0.2500000
+    ## 2 . 1 0.5000000 .         0.2500000 0.6250000
+    ## 3 . . 0.7071068 .         0.3535534 0.1767767
+    ## 4 . . .         0.8660254 0.4330127 0.2165064
+    ## 5 . . .         .         0.7071068 0.3535534
+    ## 6 . . .         .         .         0.6846532
 
-```r
-(A_chol = L %*% t(L)) 
+``` r
+cholA = crossprod(L)
+cholA
 ```
 
-# Inverse of the relationship matrix 
+    ## 6 x 6 sparse Matrix of class "dsCMatrix"
+    ##      1     2      3      4      5      6
+    ## 1 1.00 .     0.5000 0.5000 0.5000 0.2500
+    ## 2 .    1.000 0.5000 .      0.2500 0.6250
+    ## 3 0.50 0.500 1.0000 0.2500 0.6250 0.5625
+    ## 4 0.50 .     0.2500 1.0000 0.6250 0.3125
+    ## 5 0.50 0.250 0.6250 0.6250 1.1250 0.6875
+    ## 6 0.25 0.625 0.5625 0.3125 0.6875 1.1250
 
-If $A = LL^T$, where $L$ is a lower triangular and $L^T$ is its transpose, then 
-then the inverse of $A$ can be computed as follows:
+Note that $LL^T = L^TL$ only if $L$ is orthogonal. Remember that a matix
+is defined orthogonal if $LL^T = L^TL = I$
 
-$A^-1 = (LL^T)^-1$
-
-Using the property of matrix inversion:
-
-$(LL^T) = (L^T)^-1L^-1$
-
-Thus, 
-
-$A^-1 = (L^T)^-1L^-1$
-
-where, 
-- L^{-1} is the inverse of the triangular matrix $L$
-- L^{-T} is the inverse of the transpose of $L$, which is the transpose of L^{-1}
-
-Note that 
-$L = T %8% sqrt(D)$
-
-
-```r
-getAInv(ped2)
+``` r
+L %*% t(L)
 ```
 
-# Definitions
+    ## 6 x 6 sparse Matrix of class "dgCMatrix"
+    ##           1         2         3         4         5         6
+    ## 1 1.8125000 0.5312500 0.5745243 0.7036456 0.4419417 0.1711633
+    ## 2 0.5312500 1.7031250 0.5524272 0.2435696 0.3977476 0.4279082
+    ## 3 0.5745243 0.5524272 0.6562500 0.1913664 0.3125000 0.1210307
+    ## 4 0.7036456 0.2435696 0.1913664 0.9843750 0.3827328 0.1482318
+    ## 5 0.4419417 0.3977476 0.3125000 0.3827328 0.6250000 0.2420615
+    ## 6 0.1711633 0.4279082 0.1210307 0.1482318 0.2420615 0.4687500
+
+``` r
+t(L) %*% L
+```
+
+    ## 6 x 6 sparse Matrix of class "dgCMatrix"
+    ##      1     2      3      4      5      6
+    ## 1 1.00 .     0.5000 0.5000 0.5000 0.2500
+    ## 2 .    1.000 0.5000 .      0.2500 0.6250
+    ## 3 0.50 0.500 1.0000 0.2500 0.6250 0.5625
+    ## 4 0.50 .     0.2500 1.0000 0.6250 0.3125
+    ## 5 0.50 0.250 0.6250 0.6250 1.1250 0.6875
+    ## 6 0.25 0.625 0.5625 0.3125 0.6875 1.1250
+
+# 5) Inverse of the numerator relationship matrix
+
+## Using LL’ method
+
+Computational, inverse A directly, is inefficient when we need to
+compute a huge number of animals, that is why both Cholesky
+decomposition and generalized Cholesky decomposition help us to solve
+it.
+
+Thus, if
+
+$$
+A = LL^T 
+$$
+
+and
+
+$$LL^T = (L^T)^{-1}L^{-1}$$
+
+Then,
+
+$$A^{-1} = (L^T)^{-1}L^{-1} =  (LL^T)^{-1}$$
+
+where, - $L^{-1}$ is the inverse of the triangular matrix $L$ - $L^{-T}$
+is the inverse of the transpose of $L$, which is the transpose of L^{-1}
+
+``` r
+solve(t(L) %*% L)
+```
+
+    ## 6 x 6 sparse Matrix of class "dgCMatrix"
+    ##               1          2    3          4             5         6
+    ## 1  1.833333e+00  0.5000000 -1.0 -0.6666667  1.110223e-16  .       
+    ## 2  5.000000e-01  2.0333333 -1.0  .          5.333333e-01 -1.066667
+    ## 3 -1.000000e+00 -1.0000000  2.5  0.5000000 -1.000000e+00  .       
+    ## 4 -6.666667e-01  .          0.5  1.8333333 -1.000000e+00  .       
+    ## 5  1.110223e-16  0.5333333 -1.0 -1.0000000  2.533333e+00 -1.066667
+    ## 6  .            -1.0666667  .    .         -1.066667e+00  2.133333
+
+## Using factorization method
+
+Finally, $A^{-1}$ should be from generalized Cholesky decomposition.
+
+$$A^{-1} = (T^{-1})^TD^{-1}T^{-1}$$
+
+The diagonal $D^{-1}$ inverse is easy to compute because is the
+reciprocal of diagonal elements of $D$
+
+``` r
+invD = solve(diag(D))
+invD
+```
+
+    ##      [,1] [,2] [,3]     [,4] [,5]     [,6]
+    ## [1,]    1    0    0 0.000000    0 0.000000
+    ## [2,]    0    1    0 0.000000    0 0.000000
+    ## [3,]    0    0    2 0.000000    0 0.000000
+    ## [4,]    0    0    0 1.333333    0 0.000000
+    ## [5,]    0    0    0 0.000000    2 0.000000
+    ## [6,]    0    0    0 0.000000    0 2.133333
+
+``` r
+getDInv(ped2)
+```
+
+    ##        1        2        3        4        5        6 
+    ## 1.000000 1.000000 2.000000 1.333333 2.000000 2.133333
+
+Now, $T^-1$ is a lower triangular matrix with $1$ in the diagonal the
+only non-zeros elements $-0.5$ correspond to know parents of the animal
+$i$. It can be derived as $I - M$, where $I$ is an identuty matrix of
+the order of animal on the pedigree and $M$ is a matrix of the
+contributions of gametes from parents to progeny (Kennedy, 19)
+
+Thus, the matrix $I$
+
+``` r
+n = length(ped2@label)
+I = diag(n)
+I
+```
+
+    ##      [,1] [,2] [,3] [,4] [,5] [,6]
+    ## [1,]    1    0    0    0    0    0
+    ## [2,]    0    1    0    0    0    0
+    ## [3,]    0    0    1    0    0    0
+    ## [4,]    0    0    0    1    0    0
+    ## [5,]    0    0    0    0    1    0
+    ## [6,]    0    0    0    0    0    1
+
+the matrix $M$
+
+``` r
+m = matrix(0, n, n)
+m
+```
+
+    ##      [,1] [,2] [,3] [,4] [,5] [,6]
+    ## [1,]    0    0    0    0    0    0
+    ## [2,]    0    0    0    0    0    0
+    ## [3,]    0    0    0    0    0    0
+    ## [4,]    0    0    0    0    0    0
+    ## [5,]    0    0    0    0    0    0
+    ## [6,]    0    0    0    0    0    0
+
+Now, for simplicity we can use the function
+
+``` r
+invT = getTInv(ped2)
+```
+
+Now,
+
+``` r
+gCholAinv = t(invT) %*% invD %*% invT
+gCholAinv
+```
+
+    ## 6 x 6 Matrix of class "dgeMatrix"
+    ##            1          2    3          4          5         6
+    ## 1  1.8333333  0.5000000 -1.0 -0.6666667  0.0000000  0.000000
+    ## 2  0.5000000  2.0333333 -1.0  0.0000000  0.5333333 -1.066667
+    ## 3 -1.0000000 -1.0000000  2.5  0.5000000 -1.0000000  0.000000
+    ## 4 -0.6666667  0.0000000  0.5  1.8333333 -1.0000000  0.000000
+    ## 5  0.0000000  0.5333333 -1.0 -1.0000000  2.5333333 -1.066667
+    ## 6  0.0000000 -1.0666667  0.0  0.0000000 -1.0666667  2.133333
+
+The function $getAinv$ compute $(L^T)^{-1}L^{-1$, note that in this case
+$L=sqrt(T)$
+
+``` r
+(getAInv(ped2))
+```
+
+    ## 6 x 6 sparse Matrix of class "dsCMatrix"
+    ##            1          2    3          4          5         6
+    ## 1  1.8333333  0.5000000 -1.0 -0.6666667  .          .       
+    ## 2  0.5000000  2.0333333 -1.0  .          0.5333333 -1.066667
+    ## 3 -1.0000000 -1.0000000  2.5  0.5000000 -1.0000000  .       
+    ## 4 -0.6666667  .          0.5  1.8333333 -1.0000000  .       
+    ## 5  .          0.5333333 -1.0 -1.0000000  2.5333333 -1.066667
+    ## 6  .         -1.0666667  .    .         -1.0666667  2.133333
+
+# Key word
 
 Mendelian sampling
 
@@ -379,4 +581,3 @@ Conditionally probability
 Cholesky decomposition
 
 Matrix properties
-
