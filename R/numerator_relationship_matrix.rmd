@@ -14,8 +14,7 @@ library(package = "markdown")
 ```
 
 
-
-# Introduction
+# 1) Introduction
 
 The additive relationships measure the proportion of genes that are identical by descendant and are expected to be shared by two animals (Wright, 1921). However, Malecot (1948) was a question of how defined relationship-based probabilities of individual genes at a locus being identical by descent.
 
@@ -39,7 +38,7 @@ The diagonals $(a_{ii})$ contain the coefficient of inbreeding. That is the prob
 For the aim of this exercise, I will use the library “pedigreeTools”:
 <https://github.com/Rpedigree/pedigreeTools>
 
-# 1) Create a pedigree
+# 2) Create a pedigree
 
 First we will create a pedigree
 
@@ -54,14 +53,16 @@ ped2 = pedigree(sire  = ped$fid,
 print(ped2)
 ```
 
-# Construction of the relationship matrix
+# 3) Construction of the Relationship Matrix
 Systematic recurrent rules that are based on the flow of genes from generation to generation with individual animals being specified.
 
-- Path coefficient method: Suitable for small pedigrees with few generations and little inbreeding.
-- Recursively using the tabular method: 
-- xxx
+a) Recursively using the tabular method (Emik and Terrill, 1949; Cruden, 1949; Henderson, 1976)
+d) Generalized Cholesky Decomposition (Thompson, 1977)
+c) Cholesky Decomposition (Henderson, 1976)
 
-# 2) Tabular method
+There are more, https://www.frontiersin.org/journals/genetics/articles/10.3389/fgene.2021.655638/full.
+
+## a) Tabular Method
 
 Method described by Henderson (1976). Initially, the pedigree is ordered chronologically so that parents precede offspring. Base parents are considered unrelated and non-inbred. Then, working one row at a time, compute elements of $A$ using the following relationships:
 
@@ -107,19 +108,18 @@ tabularA <- function(ped) {
     }
     return(A)
 }
-```
 
-
-```{r}
 tabularA(ped)
 ```
 
-# 3) Generalized cholesky decomposition
+
+## b) Generalized Cholesky Decomposition
 
 The numerator relationship matrix $A$ can be expressed as $TDT^T$ (Thompson, 1977), where $T$ 
 is a lower triangular matrix and $D$ is a diagonal matrix.
 
-## Matrix T
+### Matrix T
+
 The matrix $T$ traces the flow of genes from one generation to the other. For example, for our small pedigree, we know that the expected and variance of the breeding values are as follow:
 
 $$
@@ -246,7 +246,7 @@ T = getT(ped2)
 T
 ```
 
-## Matrix D
+### Matrix D
 The diagonal matrix $D$ is the variance and covariance matrix for Mendelian sampling. If there is no inbreeding, the values
 for each diagonal are 1 if no parents are known, 3/4 if one of the parents is known and 1/2 if both parents are known.
 
@@ -303,7 +303,7 @@ gCholA = T %*% diag(D) %*% t(T)
 gCholA
 ```
 
-# 4) Cholesky decomposition 
+## b) Cholesky Decomposition 
 As the recursive method for computing $A$ can be demanding, Henderson (1975) proposed the Cholesky decomposition to build $A$. According to theory a matrix, as $A$ is symmetric and positive defined, it can be decomposed as:
  
 $$
@@ -339,7 +339,7 @@ L %*% t(L)
 t(L) %*% L
 ```
     
-# 5) Inverse of the numerator relationship matrix
+# 5) Inverse of the Numerator Relationship Matrix
 
 ## Using LL' method
 
@@ -421,7 +421,7 @@ The function $getAinv$ compute $(L^T)^{-1}L^{-1$, note that in this case $L=sqrt
 ```
 
 
-# Key words
+# Key words xxxx
 
 Mendelian sampling
 
