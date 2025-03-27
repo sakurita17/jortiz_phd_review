@@ -1,6 +1,6 @@
 ---
 title: "Numerator Relationship Matrix"
-output: github_document
+output: rmarkdown::github_document
 ---
 ================
 2025-02-24
