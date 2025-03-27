@@ -1,6 +1,6 @@
 ---
 title: "Numerator Relationship Matrix"
-output: html_notebook 
+output: html_notebook
 ---
 ================
 2025-02-24
@@ -421,7 +421,7 @@ The function $getAinv$ compute $(L^T)^{-1}L^{-1$, note that in this case $L=sqrt
 ```
 
 
-# Key word
+# Key words
 
 Mendelian sampling
 
