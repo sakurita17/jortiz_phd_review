@@ -118,7 +118,7 @@ tabularA(ped)
 The numerator relationship matrix $A$ can be expressed as $TDT^T$ (Thompson, 1977), where $T$ 
 is a lower triangular matrix and $D$ is a diagonal matrix.
 
-### Matrix T
+## Matrix T
 
 The matrix $T$ traces the flow of genes from one generation to the other. For example, for our small pedigree, we know that the expected and variance of the breeding values are as follow:
 
@@ -241,12 +241,12 @@ $$
 
 We use the function $getT$ from pedigreeTools to get the matrix $T$. This function compute $T$ from its inverse.
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 T = getT(ped2)
 T
 ```
 
-### Matrix D
+## Matrix D
 The diagonal matrix $D$ is the variance and covariance matrix for Mendelian sampling. If there is no inbreeding, the values
 for each diagonal are 1 if no parents are known, 3/4 if one of the parents is known and 1/2 if both parents are known.
 
@@ -305,47 +305,92 @@ gCholA
 
 ## b) Cholesky Decomposition 
 As the recursive method for computing $A$ can be demanding, Henderson (1975) proposed the Cholesky decomposition to build $A$. According to theory a matrix, as $A$ is symmetric and positive defined, it can be decomposed as:
- 
-$$
-\begin{aligned}
-A &= LL^T\\
-\end{aligned}
-$$ 
 
+$A = LL^T$
+ 
 Where
 
 $L$ is a lower triangular matrix, and
-$L'$ is its transpose
+$L^T$ is its transpose
 
-$L$ can be manually computed by following there some rules. However, $L = T %*%sqrt(D)$, and this is the method implemented by the function $getL$ from the R package $pedigreeTools$
+$L$ can be manually computed by following there some rules. However, $L = T\sqrt(D)$, and this is the method implemented by the function $getL$ from the R package $pedigreeTools$
 
 ```{r}
 L = getL(ped2)
 L
 ```
 
+Then, we can get the matrix $A$ by using the function $crossprod()$
+
 ```{r}
 cholA = crossprod(L)
 cholA
 ```
 
-Note that $LL^T = L^TL$ only if $L$ is orthogonal. Remember that a matix is defined orthogonal if  $LL^T = L^TL = I$
+Note that $LL^T = L^TL$ only if $L$ is orthogonal. Remember that a matrix is defined orthogonal if  $LL^T = L^TL = I$
 
+# 4) Inverse of the Numerator Relationship Matrix
+
+When we to compute a huge number of animals, directly inverse $A$ is computational inefficient, that is why both Cholesky decomposition and generalized Cholesky decomposition help us to solve it.
+
+## a) Inverse from generalized Cholesky decomposition
+
+If $A = TDT^T$, then $A^-1$
+
+$$
+(A)^{-1} = (TDT^T)^{-1} \\
+A^{-1} = T^{-1}D^{-1}(T^T)^{-1} \\
+A^{-1} = (T^{-1})^TD^{-1}T^{-1}
+$$
+## Matrix D^-1   
+
+The diagonal $D^{-1}$ inverse is easy to compute because is the reciprocal of diagonal elements of $D$, $d_{ii} = 1/d_{ii}$
 
 ```{r}
-L %*% t(L)
+invD = solve(diag(D))
+invD
 ```
+
+## Matrix T^-1
+
+Since $T^{-1}$ is a lower triangular matrix with $1$ in the diagonal the only non-zeros elements $-0.5$ correspond to know parents of the animal $i$. It can be derived as $I - M$, where $I$ is an identity matrix of the order of animal on the pedigree and $M$ is a matrix of the contributions of gametes from parents to progeny (Kennedy, 19)
+
+For example, for this example $I$
+
 ```{r}
-t(L) %*% L
+n = length(ped2@label)
+I = diag(n)
+I
 ```
-    
-# 5) Inverse of the Numerator Relationship Matrix
 
-## Using LL' method
+and, the matrix $M$
 
-Computational, inverse A directly, is inefficient when we need to compute a huge number of animals, that is why both Cholesky decomposition and generalized Cholesky decomposition help us to solve it.
+```{r}
+m = matrix(0, n, n)
+m
+```
 
-Thus, if
+For simplicity we can use the function $getTInv$ from pedigreeTools 
+
+```{r}
+invT = getTInv(ped2)
+invT
+```
+
+Manually, we compute $A^{-1} as follow
+
+```{r}
+gCholAinv = t(invT) %*% invD %*% invT
+gCholAinv
+```
+
+However, easily we run the function $getAinv$ compute $(L^T)^{-1}L^{-1}$, note that in this case $L=T\sqrt(D)$
+
+```{r}
+(getAInv(ped2))
+```
+
+## a) Inverse from generalized Cholesky decomposition
 
 $$
 A = LL^T 
@@ -359,81 +404,18 @@ Then,
 
 $$A^{-1} = (L^T)^{-1}L^{-1} =  (LL^T)^{-1}$$
 
-where, 
-- $L^{-1}$ is the inverse of the triangular matrix $L$
-- $L^{-T}$ is the inverse of the transpose of $L$, which is the transpose of L^{-1}
-
-
 ```{r}
 solve(t(L) %*% L)
 ```
 
-## Using factorization method
 
-Finally, $A^{-1}$ should be from generalized Cholesky decomposition. 
+## Key words
 
-$$A^{-1} = (T^{-1})^TD^{-1}T^{-1}$$
+Mendelian sampling,
+Marginal probability,
+Conditionally probability,
+Cholesky decomposition,
+Matrix properties,
+Matvec 
 
-The diagonal $D^{-1}$ inverse is easy to compute because is the reciprocal of diagonal elements of $D$
-
-```{r}
-invD = solve(diag(D))
-invD
-```
-
-```{r}
-getDInv(ped2)
-```
-
-Now, $T^-1$ is a lower triangular matrix with $1$ in the diagonal the only non-zeros elements $-0.5$ correspond to know parents of the animal $i$. It can be derived as $I - M$, where $I$ is an identuty matrix of the order of animal on the pedigree and $M$ is a matrix of the contributions of gametes from parents to progeny (Kennedy, 19)
-
-Thus, the matrix $I$
-
-```{r}
-n = length(ped2@label)
-I = diag(n)
-I
-```
-the matrix $M$
-
-```{r}
-m = matrix(0, n, n)
-m
-```
-
-Now, for simplicity we can use the function 
-
-```{r}
-invT = getTInv(ped2)
-```
-
-Now,
-
-```{r}
-gCholAinv = t(invT) %*% invD %*% invT
-gCholAinv
-```
-
-The function $getAinv$ compute $(L^T)^{-1}L^{-1$, note that in this case $L=sqrt(T)$
-
-```{r}
-(getAInv(ped2))
-```
-
-
-# Key words xxxx
-
-Mendelian sampling
-
-Marginal probability
-
-Conditionally probability
-
-Cholesky decomposition
-
-Matrix properties
-
-```{r}
-rmarkdown::render("your_file.Rmd", output_format = "github_document")
-```
 
